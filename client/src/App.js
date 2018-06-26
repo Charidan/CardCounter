@@ -1,8 +1,7 @@
 import React, {Component} from 'react';
 import './App.css';
 import Util from './util.js';
-import { PhonemeCreationForm, PhonemeRow } from './phonemeEntry.js';
-import { LanguageCreationForm, LanguageRow } from './languageEntry.js';
+import { GameCreationForm, GameRow } from './gameEntry.js';
 import axios from 'axios';
 
 class App extends Component
@@ -11,33 +10,20 @@ class App extends Component
     {
         super();
         this.state = {
-            langlist : [],
-            phonemelist: [],
+            gamelist : [],
         };
         this.server = axios.create({
-            baseURL: 'http://localhost:2837/langgen',
+            baseURL: 'http://localhost:2837/cardcounter',
             timeout: 10000,
         });
-        this.fetchLanguages();
-        this.fetchPhonemes();
+        this.fetchGames();
     }
 
-    fetchLanguages()
+    fetchGames()
     {
-        this.server.get('/languages').then(res =>
+        this.server.get('/games').then(res =>
         {
-            this.setState({langlist : res.data});
-        }).catch(err =>
-        {
-            console.error(err);
-        });
-    }
-
-    fetchPhonemes()
-    {
-        this.server.get('/phonemes').then(res =>
-        {
-            this.setState({phonemelist : res.data});
+            this.setState({gamelist : res.data});
         }).catch(err =>
         {
             console.error(err);
@@ -50,64 +36,35 @@ class App extends Component
         return (
             <div className="App">
                 <div className="App-header">
-                    <h2>Language Generator by Richard Nicholson</h2>
+                    <h2>Card Counter by Richard Nicholson</h2>
                 </div>
-                <div className="mainsection">
-                    <div>
-                        <h3>LANGUAGES</h3>
-                        <table className="bordered">
-                            <thead>
-                            <tr>
-                                <th>id</th>
-                                <th>Name</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                                {this.state.langlist.map((lang, index) => <LanguageRow name={lang.name} id={lang.id} key={index} />)}
-                            </tbody>
-                        </table>
+                <div className="below-header">
+                    <div className="modebar">
+                        { this.state.locked ?
+                          <div><i className="fa fa-lock fa-2x clickable pad-2" onClick={() => this.doUnlock()} /></div> :
+                          <div><i className="fa fa-unlock fa-2x clickable pad-2" onClick={() => this.doLock()} /></div>
+                        }
                     </div>
-                    <div>
-                        <LanguageCreationForm app={this}/>
+                    <div className="mainsection">
+                        <div>
+                            <h3>GAMES</h3>
+                            <table className="bordered">
+                                <thead>
+                                <tr>
+                                    <th>id</th>
+                                    <th>Name</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    {this.state.gamelist.map((game, index) => <GameRow name={game.name} id={game.id} key={index} />)}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div>
+                            <GameCreationForm app={this}/>
+                        </div>
                     </div>
-                </div>
-                <br/>
-                <div className="mainsection">
-                    <div>
-                        <h3>PHONEMES</h3>
-                        <table className="bordered">
-                            <thead>
-                            <tr>
-                                <th>id</th>
-                                <th>kind</th>
-                                <th>long</th>
-                                <th>nasal</th>
-
-                                <th>front</th>
-                                <th>back</th>
-                                <th>high</th>
-                                <th>low</th>
-                                <th>tense</th>
-                                <th>round</th>
-
-                                <th>place</th>
-                                <th>manner</th>
-                                <th>aspirated</th>
-                                <th>ejective</th>
-                                <th>lateral</th>
-                                <th>retroflex</th>
-                                <th>sibilant</th>
-                                <th>voiced</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {this.state.phonemelist.map((phoneme, index) => <PhonemeRow phoneme={phoneme} id={phoneme.id} key={index} />)}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div>
-                        <PhonemeCreationForm app={this}/>
-                    </div>
+                    <br/>
                 </div>
             </div>
         );

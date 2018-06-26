@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 
-class LanguageRow extends Component
+class GameRow extends Component
 {
     constructor(props)
     {
@@ -21,12 +21,15 @@ class LanguageRow extends Component
                 <td>
                     {this.state.name}
                 </td>
+                <td>
+                    <button>Open Game</button>
+                </td>
             </tr>
         )
     }
 }
 
-class LanguageCreationForm extends React.Component
+class GameCreationForm extends React.Component
 {
     constructor(props)
     {
@@ -47,11 +50,11 @@ class LanguageCreationForm extends React.Component
 
     handleSubmit(event)
     {
-        this.app.server.post("/languages", {
+        this.app.server.post("/games", {
             name: this.state.value,
         });
         this.setState({value: ''});
-        this.app.fetchLanguages();
+        this.app.fetchGames();
         event.preventDefault();
     }
 
@@ -70,4 +73,4 @@ class LanguageCreationForm extends React.Component
     }
 }
 
-export { LanguageCreationForm, LanguageRow };
+export { GameCreationForm, GameRow };
