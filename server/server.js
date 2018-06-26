@@ -1,17 +1,19 @@
-var express     = require('express');
-var server      = express();
-var bodyParser  = require('body-parser');
-var mongoose    = require('mongoose');
+const express     = require('express');
+const server      = express();
+const bodyParser  = require('body-parser');
+const mongoose    = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/cardcounter', {
     useMongoClient: true,
 });
 
 //MODELS ///////////////////////////////////////////////
-var Game = require('./models/game').Game;
+const Game = require('./models/game').Game;
+const Deck = require('./models/deck').Deck;
+const Card = require('./models/card').Card;
 ////////////////////////////////////////////////////////
 
 //Utilities ////////////////////////////////////////////
-var fail = (err_msg,res) => {
+const fail = (err_msg,res) => {
     console.error(err_msg);
     res.status(500).send({error: err_msg});
 };
@@ -27,7 +29,7 @@ server.use(function(req, res, next) {
     next();
 });
 
-var router = express.Router();
+const router = express.Router();
 
 //ROUTES ////////////////////////////////////////////////
 router.use((req, res, next) => {
@@ -37,7 +39,7 @@ router.use((req, res, next) => {
     next(); // permission granted
 });
 
-var about = (req, res) => { res.json({name: 'card-counter-server', displayName: 'About Page by Richard Nicholson', version: '0.0.1'})}
+const about = (req, res) => { res.json({name: 'card-counter-server', displayName: 'About Page by Richard Nicholson', version: '0.0.1'})}
 router.get('/', about);
 router.get('/about', about);
 router.route('/games')
@@ -45,17 +47,17 @@ router.route('/games')
       .post((req, res) => {
           Game.count().exec((err, ret) => {
               if(err) { fail(err, ret); return; }
-              var id = ret + 1;
-              var game = new Game();
+              let id = ret + 1;
+              let game = new Game();
               game.name = (req.body.name ? req.body.name : ('Game'+id));
               game.id = id;
-              game.save((err) => err ? fail(err, res) : res.json(game))
+              game.save((err) => err ? fail(err, res) : res.json(game));
           })
       });
 
 /////////////////////////////////////////////////////////
 
 server.use('/cardcounter', router);
-var port = process.env.PORT || 2837
+const port = process.env.PORT || 2837
 server.listen(port);
 console.log("CardCounter Server running on port "+port);
