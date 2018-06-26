@@ -1,0 +1,65 @@
+.App
+{
+}
+
+.App-header
+{
+    background-color: #000000;
+    height: 70px;
+    padding: 20px;
+    color: white;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.pad-2
+{
+    padding: 10px;
+}
+
+.margin-r
+{
+    margin-right: 10px;
+}
+
+ul
+{
+    list-style-type: none;
+}
+
+.blue
+{
+    color: blue;
+}
+
+.grey
+{
+    color: gray;
+}
+
+.yellow-back
+{
+    background-color: yellow;
+}
+
+.modebar
+{
+    float: left;
+    top: 70px;
+}
+
+.mainsection {
+    margin: auto;
+    width: 60%;
+    padding: 10px;
+    border-style: double;
+    border-width: 10px;
+}
+
+table.bordered {
+    border-collapse: collapse;
+}
+
+table.bordered, table.bordered > thead > tr > th, table.bordered > tbody > tr > td {
+    border: 1px solid black;
+}
