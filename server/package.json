@@ -1,5 +1,5 @@
 {
-  "name": "langgenserver",
+  "name": "card-counter-server",
   "version": "0.0.0",
   "private": true,
   "scripts": {
