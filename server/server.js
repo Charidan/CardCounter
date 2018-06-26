@@ -54,6 +54,28 @@ router.route('/games')
               game.save((err) => err ? fail(err, res) : res.json(game));
           })
       });
+router.route('/decks')
+      .get((req, res) => { Deck.find().exec((err,ret) => (err ? fail(err) : res.json(ret))) })
+      .post((req, res) => {
+          Deck.count().exec((err, ret) => {
+              if(err) { fail(err, ret); return; }
+              let id = ret + 1;
+              let deck = new Deck();
+              deck.name = (req.body.name ? req.body.name : ('Deck'+id));
+              deck.id = id;
+              deck.gameid = req.body.gameid;
+
+              if(req.body.rangeMin != null && req.body.rangeMax != null)
+              {
+                  for(let i = req.body.rangeMin; i <= req.body.rangeMax; i++)
+                  {
+                      deck.putOnBottom(new Card({value: i, gameid: req.body.gameid, deckid: id}));
+                  }
+              }
+
+              deck.save((err) => err ? fail(err, res) : res.json(deck));
+          })
+      });
 
 /////////////////////////////////////////////////////////
 
