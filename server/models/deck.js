@@ -1,6 +1,5 @@
-import {Card} from "./card";
-
 const mongoose = require('mongoose');
+//const Card = require("./card").Card;
 
 const deckSchema = new mongoose.Schema({
     name: String,
@@ -9,20 +8,18 @@ const deckSchema = new mongoose.Schema({
     cards: Array,
 });
 
-const Deck = mongoose.model('Deck', deckSchema);
-
-Deck.methods.draw = function()
+deckSchema.methods.draw = function()
 {
     return this.cards.shift();
 };
 
-Deck.methods.putOnBottom = function(card, faceup)
+deckSchema.methods.putOnBottom = function(card, faceup)
 {
     card.faceup = faceup ? faceup : false;
     this.cards.push(card);
 };
 
-Deck.methods.shuffle = function()
+deckSchema.methods.shuffle = function()
 {
     let currentIndex = this.cards.length;
     let temporaryValue, randomIndex;
@@ -40,5 +37,7 @@ Deck.methods.shuffle = function()
         this.cards[randomIndex] = temporaryValue;
     }
 };
+
+const Deck = mongoose.model('Deck', deckSchema);
 
 module.exports = {Deck: Deck, deckSchema: deckSchema};
