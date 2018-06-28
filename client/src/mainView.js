@@ -69,7 +69,7 @@ class AllGamesList extends React.Component
                         <thead>
                         <tr>
                             <th>id</th>
-                            <th>Name</th>
+                            <th>Game Name</th>
                         </tr>
                         </thead>
                         <tbody>

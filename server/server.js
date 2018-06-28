@@ -69,12 +69,45 @@ router.route('/decks')
               {
                   for(let i = req.body.rangeMin; i <= req.body.rangeMax; i++)
                   {
-                      deck.putOnBottom(new Card({value: i, gameid: req.body.gameid, deckid: id, faceup: false}));
+                      deck.putOnBottom(new Card({value: i, gameid: req.body.gameid, deckid: id}));
                   }
               }
 
               deck.save((err) => err ? fail(err, res) : res.json(deck));
-          })
+          });
+      });
+
+var test_id = null;
+router.route('/savetest')
+      .get((req, res) => {
+          Game.count().exec((err, ret) => {
+              if(err) { fail(err, ret); return; }
+              let id = ret + 1;
+              let game = new Game();
+              game.name = ('Save Test '+id);
+              game.id = id;
+              test_id = id;
+
+              Deck.count().exec((err, ret) => {
+                  if(err) { fail(err, ret); return; }
+                  let id = ret + 1;
+                  let deck = new Deck();
+                  deck.name = 'Test Deck '+id;
+                  deck.id = id;
+                  deck.gameid = game.id;
+
+                  for(let i = 1; i <= 10; i++)
+                  {
+                      deck.putOnBottom(new Card({value: i, gameid: game.id, deckid: id}));
+                  }
+              });
+
+              game.save((err) => err ? fail(err, res) : res.json(game));
+          });
+      })
+      .post((req,res) => {
+          let game = Game.findOne(test_id);
+          game.decks[0].cards[0].value = 999;
       });
 
 /////////////////////////////////////////////////////////

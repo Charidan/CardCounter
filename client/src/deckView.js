@@ -17,7 +17,11 @@ class CardRow extends Component
 
     handleChange(event)
     {
-        if(event.target.type === "checkbox") this.card.setState({faceup: event.target.value});
+        if(event.target.type === "checkbox")
+        {
+            this.card.faceup = event.target.value;
+            this.forceUpdate();
+        }
         else this.setState({editName: event.target.value})
     }
 
@@ -42,10 +46,10 @@ class CardRow extends Component
                 {this.state.app.state.locked ?
                     null :
                     this.state.editing ?
-                        <fragment>
+                        <Fragment>
                             <td><input name="Face Up" type="checkbox" checked={this.state.card.faceup} onChange={this.handleChange}/></td>
                             <td><button onClick={ this.updateCard }>Update Card</button></td>
-                        </fragment>
+                        </Fragment>
                         :
                         <td colSpan="2"><button onClick={ this.editCard }>Edit Card</button></td>
                 }
@@ -75,7 +79,7 @@ class DeckDisplay extends React.Component
                         <thead>
                         <tr>
                             <th>id</th>
-                            <th>Name</th>
+                            <th>Card Number</th>
                             <th colSpan="2"> </th>
                         </tr>
                         </thead>

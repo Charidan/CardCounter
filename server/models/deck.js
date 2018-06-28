@@ -1,3 +1,5 @@
+import {Card} from "./card";
+
 const mongoose = require('mongoose');
 
 const deckSchema = new mongoose.Schema({
@@ -14,8 +16,9 @@ Deck.methods.draw = function()
     return this.cards.shift();
 };
 
-Deck.methods.putOnBottom = function(card)
+Deck.methods.putOnBottom = function(card, faceup)
 {
+    card.faceup = faceup ? faceup : false;
     this.cards.push(card);
 };
 

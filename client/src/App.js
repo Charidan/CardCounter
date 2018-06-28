@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
 import './App.css';
-import Util from './util.js';
 import { AllGamesList } from './mainView.js';
 import { GameDisplay } from './gameView.js';
 import axios from 'axios';
@@ -45,9 +44,29 @@ class App extends Component
         this.setState({locked: false});
     }
 
-    openGame(gameid)
+    openGame(game)
     {
-        this.state.activeGame = gameid;
+        this.setState({activeGame : game});
+    }
+
+    openDeck(deck, game)
+    {
+        let newState = {activeDeck : deck};
+        if(game) newState.activeGame = game;
+        this.setState(newState);
+    }
+
+    saveTest_create()
+    {
+        this.server.get('/savetest');
+        this.fetchGames();
+
+    }
+
+    saveTest_execute()
+    {
+        this.server.post('/savetest');
+        this.fetchGames();
     }
 
     render()
@@ -71,6 +90,8 @@ class App extends Component
                         :
                         <AllGamesList app={this}/>
                     }
+                    <button onClick={this.saveTest_create}>Create Save Test</button>
+                    <button onClick={this.saveTest_execute}>ExecuteSave Test</button>
                 </div>
             </div>
         );

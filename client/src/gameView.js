@@ -23,7 +23,7 @@ class DeckRow extends Component
                     {this.state.deck.name}
                 </td>
                 <td>
-                    {this.state.app.state.locked ? null : <button onClick={ () => this.state.app.editDeck(this.state.game.id, this.state.deck.id) }>Edit Card</button>}
+                    <button onClick={ () => this.state.app.openDeck(this.state.game, this.state.deck) }>View Deck</button>
                 </td>
             </tr>
         )
@@ -38,26 +38,46 @@ class GameDisplay extends React.Component
         this.state = {
             app: props.app,
             game: props.game,
+            drawnCard: null,
         };
     }
 
     render()
     {
+        // TODO
         return (
             <div className="mainsection">
                 <div>
-                    <h3>{this.state.deck.name}</h3>
+                    <h3>{this.state.game.name}</h3>
                     <table className="bordered">
                         <thead>
                         <tr>
                             <th>id</th>
-                            <th>Name</th>
+                            <th>Deck Name</th>
+                            <th> </th>
                         </tr>
                         </thead>
                         <tbody>
-                        {this.state.app.state.deck.cards.map((card, index) => <DeckRow game={game} deck={deck} key={index} app={this.state.app} />)}
+                        {this.state.app.state.game.decks.map((card, index) => <DeckRow game={game} deck={deck} key={index} app={this.state.app} />)}
                         </tbody>
                     </table>
+                    <br/><br/>
+                    {
+                        //TODO change this to make new decks when unlocked
+                    }
+                    { this.state.drawnCard ?
+                        <Fragment>
+                            Drawn card: {this.state.drawnCard.value}
+                            <button>Place on bottom</button>
+                            <button>Destroy</button>
+                        </Fragment>
+                        :
+                        <Fragment>
+                          <button onClick={this.drawCard}>Draw</button>
+                          <button disabled={this.state.app.state.locked}>Shuffle</button>
+                        </Fragment>
+                    }
+
                 </div>
             </div>
         );
