@@ -1,8 +1,10 @@
 import React, {Component} from 'react';
 import './App.css';
 import Util from './util.js';
-import { GameCreationForm, GameRow } from './gameEntry.js';
+import { AllGamesList } from './mainView.js';
+import { GameDisplay } from './gameView.js';
 import axios from 'axios';
+import {DeckDisplay} from "./deckView";
 
 class App extends Component
 {
@@ -11,6 +13,9 @@ class App extends Component
         super();
         this.state = {
             gamelist : [],
+            activeGame : null,
+            activeDeck : null,
+            locked: true,
         };
         this.server = axios.create({
             baseURL: 'http://localhost:2837/cardcounter',
@@ -30,9 +35,23 @@ class App extends Component
         });
     }
 
+    doLock()
+    {
+        this.setState({locked: true});
+    }
+
+    doUnlock()
+    {
+        this.setState({locked: false});
+    }
+
+    openGame(gameid)
+    {
+        this.state.activeGame = gameid;
+    }
+
     render()
     {
-
         return (
             <div className="App">
                 <div className="App-header">
@@ -45,26 +64,13 @@ class App extends Component
                           <div><i className="fa fa-unlock fa-2x clickable pad-2" onClick={() => this.doLock()} /></div>
                         }
                     </div>
-                    <div className="mainsection">
-                        <div>
-                            <h3>GAMES</h3>
-                            <table className="bordered">
-                                <thead>
-                                <tr>
-                                    <th>id</th>
-                                    <th>Name</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                    {this.state.gamelist.map((game, index) => <GameRow name={game.name} id={game.id} key={index} />)}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div>
-                            <GameCreationForm app={this}/>
-                        </div>
-                    </div>
-                    <br/>
+                    {this.state.activeGame ?
+                        this.state.activeDeck ?
+                            <DeckDisplay app={this} game={this.state.activeGame} deck={this.state.activeDeck} /> :
+                            <GameDisplay app={this} game={this.state.activeGame} />
+                        :
+                        <AllGamesList app={this}/>
+                    }
                 </div>
             </div>
         );

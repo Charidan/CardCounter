@@ -69,7 +69,7 @@ router.route('/decks')
               {
                   for(let i = req.body.rangeMin; i <= req.body.rangeMax; i++)
                   {
-                      deck.putOnBottom(new Card({value: i, gameid: req.body.gameid, deckid: id}));
+                      deck.putOnBottom(new Card({value: i, gameid: req.body.gameid, deckid: id, faceup: false}));
                   }
               }
 

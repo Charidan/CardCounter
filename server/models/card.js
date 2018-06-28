@@ -5,6 +5,7 @@ const cardSchema = new mongoose.Schema({
     id: Number,
     gameid: Number,
     deckid: Number,
+    faceup: Boolean,
 });
 
 const Card = mongoose.model('Card', cardSchema);

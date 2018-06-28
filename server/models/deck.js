@@ -16,7 +16,6 @@ Deck.methods.draw = function()
 
 Deck.methods.putOnBottom = function(card)
 {
-    // TODO validate adding a card already in the deck?
     this.cards.push(card);
 };
 
