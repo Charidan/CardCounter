@@ -1,4 +1,5 @@
 import React, {Component} from "react";
+//import Util from "./util";
 
 class DeckRow extends Component
 {
@@ -23,7 +24,7 @@ class DeckRow extends Component
                     {this.state.deck.name}
                 </td>
                 <td>
-                    <button onClick={ () => this.state.app.openDeck(this.state.game, this.state.deck) }>View Deck</button>
+                    <button onClick={ () => this.state.app.openDeck(this.state.deck, this.state.game) }>View Deck</button>
                 </td>
             </tr>
         )
@@ -62,21 +63,46 @@ class GameDisplay extends React.Component
 
     createDeck(event)
     {
-        let reqobj = { name: this.state.value };
+        let reqobj = {
+            name: this.state.nameEntry,
+            gameid: this.state.game._id,
+        };
         if(this.state.useRange)
         {
             reqobj.rangeMin = this.state.rangeMin;
             reqobj.rangeMax = this.state.rangeMax;
         }
 
-        let deck = this.state.app.server.post("/decks", {reqobj});
-        this.setState({value: ''});
-        this.state.app.setState((prevState) => ({ decklist: prevState.decklist.push(deck)}));
+        this.state.app.server.post("/decks", reqobj).then((res) => {
+            let deck = res.data;
+            this.state.app.setState((prevState) =>
+            {
+                prevState.decklist.push(deck);
+                return {decklist: prevState.decklist}
+            });
+            this.setState({value: ''});
+        });
+
         event.preventDefault();
     }
 
     render()
     {
+        let low = this.state.useRange ?
+                  <label>
+                      Low:
+                      <input type="text" name='rangeMin' value={this.state.rangeMin} onChange={this.handleChange}/>
+                  </label>
+                  :
+                  null;
+        let high = this.state.useRange ?
+                   <label>
+                       High:
+                       <input type="text" name='rangeMax' value={this.state.rangeMax} onChange={this.handleChange}/>
+                   </label>
+                  :
+                  null;
+
         return (
             <div className="mainsection">
                 <button onClick={this.state.app.closeGame}>Return to Main</button>
@@ -94,34 +120,21 @@ class GameDisplay extends React.Component
                     </tbody>
                 </table>
                 {this.state.app.state.locked ? null :
-                    <div>
+                    <form onSubmit={this.createDeck}>
                         <br/><br/>
-                        <form onSubmit={this.createDeck}>
-                            <label>
-                                Name:
-                                <input type="text" value={this.state.nameEntry} onChange={this.handleChange}/>
-                            </label>
-                            <label>
-                                Name:
-                                <input type="checkbox" value={this.state.useRange} onChange={this.handleChange}/>
-                            </label>
-                            {this.state.useRange ?
-                                <React.Fragment>
-                                    <label>
-                                        Low:
-                                        <input type="text" value={this.state.rangeMin} onChange={this.handleChange}/>
-                                    </label>
-                                    <label>
-                                        High:
-                                        <input type="text" value={this.state.rangeMax} onChange={this.handleChange}/>
-                                    </label>
-                                </React.Fragment>
-                                :
-                                null
-                            }
-                            <input type="submit" value="Create Deck"/>
-                        </form>
-                    </div>
+                        <label>
+                            Name:
+                            <input type="text" name='nameEntry' value={this.state.nameEntry} onChange={this.handleChange}/>
+                        </label>
+                        <label>
+                            Fill with card range:
+                            <input type="checkbox" name='useRange' value={this.state.useRange} onChange={this.handleChange}/>
+                        </label>
+                        {low}
+                        {high}
+                        <br/>
+                        <input type="submit" value="Create Deck"/>
+                    </form>
                 }
             </div>
         );

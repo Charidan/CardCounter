@@ -1,4 +1,5 @@
 import React, {Component} from "react";
+//import Util from "./util";
 
 class GameRow extends Component
 {
@@ -50,11 +51,20 @@ class AllGamesList extends React.Component
 
     createGame(event)
     {
-        let newgame = this.state.app.server.post("/games", {
+        this.state.app.server.post("/games", {
             name: this.state.value,
+        }).then((res) => {
+            let newgame = res.data;
+
+            console.log("newgame = " + newgame);
+
+            this.setState({value: ''});
+            this.state.app.setState((prevState) => {
+                prevState.gamelist.push(newgame);
+                return { gamelist: prevState.gamelist}
+            });
         });
-        this.setState({value: ''});
-        this.app.setState((prevState) => ({gamelist: prevState.gamelist.push(newgame)}));
+
         event.preventDefault();
     }
 

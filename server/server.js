@@ -44,12 +44,12 @@ router.get('/', about);
 router.get('/about', about);
 
 // GET list games
-// POST create game
+// POST create gameid
 router.route('/games')
       .get((req, res) => { Game.find().exec((err,ret) => (err ? fail(err) : res.json(ret))) })
       .post((req, res) => {
           Game.count().exec((err, ret) => {
-              if(err) { fail(err, ret); return; }
+              if(err) { fail(err, res); return; }
               let id = ret + 1;
               let game = new Game();
               game.name = (req.body.name ? req.body.name : ('Game'+id));
@@ -65,23 +65,23 @@ router.route('/decks')
       .post((req, res) => {
           let game = Game.findOne({_id: req.body.gameid});
           if(game == null) {
-              fail("ERROR: attempt to create deck for non-existant game", res);
+              fail("ERROR: attempt to create deck for non-existant gameid", res);
               return;
           }
 
           Deck.count().exec((err, ret) => {
-              if(err) { fail(err, ret); return; }
+              if(err) { fail(err, res); return; }
               let id = ret + 1;
               let deck = new Deck();
               deck.name = (req.body.name ? req.body.name : ('Deck'+id));
               deck.id = id;
-              deck.gameid = req.body.gameid;
+              deck.game = req.body.gameid;
 
               if(req.body.rangeMin != null && req.body.rangeMax != null)
               {
                   for(let i = req.body.rangeMin; i <= req.body.rangeMax; i++)
                   {
-                      let card = new Card({value: i, gameid: req.body.gameid, deckid: id});
+                      let card = new Card({value: i, game: req.body.gameid, deckid: id});
                       deck.putOnBottom(card);
                   }
               }
@@ -91,130 +91,139 @@ router.route('/decks')
           });
       });
 
-// GET list decks of specified game
-router.get('/decks/:gameid', (req,res) => { Deck.find({game: req.params.gameid}).exec((err,ret) => (err ? fail(err) : res.json(ret))) });
+// GET list decks of specified gameid
+router.get('/decks/:gameid', (req,res) => { Deck.find({gameid: req.params.gameid}).exec((err, ret) => (err ? fail(err) : res.json(ret))) });
 
 // POST shuffle deck
 router.post('/deck/:deckid/shuffle', (req, res) => {
-    let deck = Deck.findOne({_id: req.params.deckid});
-    if(deck == null) {
-        fail("ERROR: attempt to shuffle non-existant deck", res);
-        return;
-    }
+    Deck.findOne({_id: req.params.deckid}).exec((err, ret) =>
+    {
+        if(err)
+        {
+            fail(err, res);
+            return;
+        }
 
-    deck.shuffle();
-    deck.save((err) => err ? fail(err, res) : res.json(deck));
+        let deck = ret.data;
+        if(deck == null)
+        {
+            fail("ERROR: attempt to shuffle non-existant deck", res);
+            return;
+        }
+
+        deck.shuffle();
+        deck.save((err) => err ? fail(err, res) : res.json(deck));
+    });
 });
 
 // POST draw a card from deck
 router.post('/deck/:deckid/draw', (req, res) => {
-    let deck = Deck.findOne({_id: req.params.deckid});
-    if(deck == null) {
-        fail("ERROR: attempt to shuffle non-existant deck", res);
-        return;
-    }
+    Deck.findOne({_id: req.params.deckid}).exec((err, ret) =>
+    {
+        if(err)
+        {
+            fail(err, res);
+            return;
+        }
 
-    let card = deck.drawCard();
-    deck.markModified('cards');
-    deck.save();
-    res.json([card, deck]);
+        let deck = ret.data;
+        if(deck == null)
+        {
+            fail("ERROR: attempt to shuffle non-existant deck", res);
+            return;
+        }
+
+        let card = deck.drawCard();
+        deck.markModified('cards');
+        deck.save();
+        res.json([card, deck]);
+    });
 });
 
 // POST put card by id on bottom of deck by id
 router.post('/deck/:deckid/putbottom/:cardid', (req, res) => {
-    let deck = Deck.findOne({_id: req.params.deckid});
-    if(deck == null) {
-        fail("ERROR: attempt to place card in non-existant deck", res);
-        return;
-    }
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid.toString())}).exec((err, ret) =>
+    {
+        if(err)
+        {
+            fail(err, res);
+            return;
+        }
 
-    let card = Card.findOne({_id: req.params.cardid});
-    if(card == null) {
-        fail("ERROR: attempt to place non-existant card in deck", res);
-        return;
-    }
+        let deck = ret.data;
+        if(deck == null)
+        {
+            fail("ERROR: attempt to place card in non-existant deck", res);
+            return;
+        }
 
-    deck.putOnBottom(card);
-    deck.markModified('cards');
-    deck.save((err) => err ? fail(err, res) : res.json(deck));
+        let card = Card.findOne({_id: req.params.cardid});
+        if(card == null)
+        {
+            fail("ERROR: attempt to place non-existant card in deck", res);
+            return;
+        }
+
+        deck.putOnBottom(card);
+        deck.markModified('cards');
+        deck.save((err) => err ? fail(err, res) : res.json(deck));
+    });
 });
 
 // POST create card for deck, place on bottom
 router.post('/deck/:deckid/createbottom/', (req, res) =>{
-    let deck = Deck.findOne({_id: req.params.deckid});
-    if(deck == null) {
-        fail("ERROR: attempt to place card in non-existant deck");
-        return;
-    }
+    Deck.findOne({_id: req.params.deckid}).exec((err, ret) =>
+    {
+        if(err)
+        {
+            fail(err, res);
+            return;
+        }
 
-    let card = new Card({value: i, gameid: deck.gameid, deckid: req.params.deckid});
+        let deck = ret;
+        if(deck == null)
+        {
+            fail("ERROR: attempt to create card in non-existant deck", res);
+            return;
+        }
 
-    deck.putOnBottom(card);
-    deck.markModified('cards');
-    deck.save((err) => err ? fail(err, res) : res.json(deck));
+        let card = new Card({value: req.body.value, game: deck.game, deckid: req.params.deckid});
+
+        deck.putOnBottom(card);
+
+        console.log("deck = ");
+        console.log(deck);
+        console.log("card = ");
+        console.log(card);
+
+        console.log(mongoose.version);
+
+        deck.markModified('cards');
+        deck.save((err) => err ? fail(err, res) : res.json(deck));
+    });
 });
 
 // POST update card
 router.post('/card/:cardid/update', (req, res) => {
-    let card = Card.findOne({_id: req.params.cardid});
-    if(card == null) {
-        fail("ERROR: attempt to update non-existant card", res);
-        return;
-    }
+    Card.findOne({_id: req.params.cardid}).exec((err, ret) =>
+    {
+        if(err)
+        {
+            fail(err, res);
+            return;
+        }
 
-    card.value = req.body.value;
-    card.save((err) => err ? fail(err, res) : res.json(card));
+        let card = ret.data;
+        if(card == null)
+        {
+            fail("ERROR: attempt to update non-existant card", res);
+            return;
+        }
+
+        card.value = req.body.value;
+        card.save((err) => err ? fail(err, res) : res.json(card));
+    });
 });
-
-// TESTING STUFF THAT WILL EVENTUALLY BE DELETED
-
-var test_id = null;
-router.route('/savetest')
-      .get((req, res) => {
-          Game.count().exec((err, ret) => {
-              if(err) { fail(err, ret); return; }
-              let id = ret + 1;
-              let game = new Game();
-              game.name = ('Save Test '+id);
-              game.id = id;
-              test_id = id;
-
-              Deck.count().exec((err, ret) => {
-                  if(err) { fail(err, ret); return; }
-                  let id = ret + 1;
-                  let deck = new Deck();
-                  deck.name = 'Test Deck '+id;
-                  deck.id = id;
-                  deck.gameid = game.id;
-
-                  for(let i = 1; i <= 2; i++)
-                  {
-                      let card = new Card({value: i, gameid: game.id, deckid: id});
-                      deck.putOnBottom(card);
-                      card.save((err) => err ? fail(err, res) : res.json(card));
-                  }
-
-                  deck.save((err) => err ? fail(err, res) : res.json(deck));
-
-                  game.decks.push(deck);
-                  console.log("created deck: " + game.decks);
-                  game.save((err) => err ? fail(err, res) : res.json(game));
-              });
-          });
-      })
-      .post((req,res) => {
-          Game.findOne({id: test_id}).populate({path: 'decks', populate: { path: 'cards' }}).exec((err, game) =>
-          {
-              console.log("err = " + err + "\n\n");
-              console.log("GAME\n"+game);
-              game.decks[0].cards[0].value = 999;
-              console.log("DECK\n"+game.decks[0]);
-              console.log("CARDS\n"+game.decks[0].cards[0].value);
-              game.markModified('decks');
-              game.save();
-              //game.decks[0].cards[0].save();
-          });
-      });
 
 /////////////////////////////////////////////////////////
 

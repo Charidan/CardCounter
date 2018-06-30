@@ -36,28 +36,34 @@ class CardRow extends Component
 
     updateCard()
     {
-        this.state.deckdisp.setState((prevState) => ({editing: prevState.deckdisp.state.editing - 1}));
-        let card = this.state.app.server.post("/card/" + this.state.card._id + "/update", {});
-        this.setState({editing: false, card: card});
+
+        this.state.app.server.post("/card/" + this.state.card._id + "/update", {}).then((res) => {
+            let card = res.data;
+            this.setState({editing: false, card: card});
+            this.state.deckdisp.setState((prevState) => ({editing: prevState.deckdisp.state.editing - 1}));
+        });
     }
 
     render()
     {
+        let colA = this.state.app.state.locked ?
+                       null :
+                       this.state.editing ?
+                           <td><input name="Face Up" type="checkbox" checked={this.state.card.faceup} onChange={this.handleChange}/></td>:
+                           <td colSpan="2"><button onClick={ this.editCard } disabled={this.state.deckdisp.state.drawnCard}>Edit Card</button></td>;
+        let colB = this.state.app.state.locked ?
+                       null :
+                       this.state.editing ?
+                            <td><button onClick={ this.updateCard }>Update Card</button></td> :
+                           null;
+
         return (
             <tr>
                 <td>
                     {this.state.card.faceup || this.state.card.editing ? this.state.card.value : "Facedown"}
                 </td>
-                {this.state.app.state.locked ?
-                    null :
-                    this.state.editing ?
-                        <React.Fragment>
-                            <td><input name="Face Up" type="checkbox" checked={this.state.card.faceup} onChange={this.handleChange}/></td>
-                            <td><button onClick={ this.updateCard }>Update Card</button></td>
-                        </React.Fragment>
-                        :
-                        <td colSpan="2"><button onClick={ this.editCard } disabled={this.state.deckdisp.state.drawnCard}>Edit Card</button></td>
-                }
+                {colA}
+                {colB}
             </tr>
         )
     }
@@ -75,6 +81,7 @@ class DeckDisplay extends React.Component
             drawnCard: null,
             newCardValue: '',
         };
+        // TODO make a cardlist and make decks not have cards in the schema
 
         this.handleChange = this.handleChange.bind(this);
         this.createCard = this.createCard.bind(this);
@@ -86,26 +93,39 @@ class DeckDisplay extends React.Component
 
     handleChange(event)
     {
-        this.setState({newCardValue: event.target.newCardValue});
+        this.setState({newCardValue: event.target.value});
     }
 
     // create a card
     createCard(event)
     {
-        let deck = this.state.app.server.post("/deck/" + this.state.deck._id + "/createbottom/", {});
-        this.setState({value: '', deck: deck});
+        this.state.app.server.post("/deck/" + this.state.deck._id + "/createbottom/", {
+            value: this.state.newCardValue,
+        }).then((res) =>
+        {
+            let deck = res.data;
+            this.state.app.setState({activeDeck: deck});
+            this.setState({newCardValue: ''});
+        });
+
         event.preventDefault();
     }
+
     shuffle()
     {
-        let deck = this.state.app.server.post("/deck/" + this.state.deck._id + "/shuffle", {});
-        this.setState({deck: deck});
+        this.state.app.server.post("/deck/" + this.state.deck._id + "/shuffle", {}).then((res) =>
+        {
+            let deck = res.data;
+            this.setState({deck: deck});
+        });
     }
 
     drawCard()
     {
-        let ret = this.state.app.server.post("/deck/" + this.state.deck._id + "/draw", {});
-        this.setState({drawnCard: ret[0], deck: ret[1]});
+        this.state.app.server.post("/deck/" + this.state.deck._id + "/draw", {}).then((res) =>
+        {
+            this.setState({drawnCard: res.data[0], deck: res.data[1]});
+        });
     }
 
     destroyDrawnCard()
@@ -115,12 +135,18 @@ class DeckDisplay extends React.Component
 
     putDrawnCardOnBottom()
     {
-        let deck = this.state.app.server.post("/deck/" + this.state.deck._id + "/putbottom/" + this.state.drawnCard._id, {});
-        this.setState({deck: deck, drawnCard: null});
+        this.state.app.server.post("/deck/" + this.state.deck._id + "/putbottom/" + this.state.drawnCard._id, {}).then((res) =>
+        {
+            let deck = res.data;
+            this.setState({deck: deck, drawnCard: null});
+        });
     }
 
     render()
     {
+        console.log("newCardValue");
+        console.log(this.state.newCardValue);
+
         return (
             <div className="mainsection">
                 <button onClick={this.state.app.closeDeck}>Return to Game</button>
@@ -134,7 +160,7 @@ class DeckDisplay extends React.Component
                     </tr>
                     </thead>
                     <tbody>
-                    {this.state.deck.cards.map((card, index) => <CardRow card={card} deckdisp={this} key={index} app={this.app} />)}
+                    {this.state.deck.cards.map((card, index) => <CardRow card={card} deckdisp={this} key={index} app={this.state.app} />)}
                     </tbody>
                 </table>
                 <div>

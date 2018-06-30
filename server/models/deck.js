@@ -5,6 +5,8 @@ const deckSchema = new mongoose.Schema({
     id: Number,
     game: { type: mongoose.Schema.Types.ObjectId, ref: 'Game' },
     cards: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Card' }],
+}, {
+    usePushEach: true
 });
 
 deckSchema.methods.drawCard = function()

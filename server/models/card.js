@@ -5,6 +5,8 @@ const cardSchema = new mongoose.Schema({
     game: { type: mongoose.Schema.Types.ObjectId, ref: 'Game' },
     deck: { type: mongoose.Schema.Types.ObjectId, ref: 'Deck' },
     faceup: Boolean,
+}, {
+    usePushEach: true
 });
 
 const Card = mongoose.model('Card', cardSchema);

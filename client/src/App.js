@@ -31,10 +31,8 @@ class App extends Component
         this.closeGame          = this.closeGame.bind(this);
         this.openDeck           = this.openDeck.bind(this);
         this.closeDeck          = this.closeDeck.bind(this);
-        this.saveTest_create    = this.saveTest_create.bind(this);
-        this.saveTest_execute   = this.saveTest_execute.bind(this);
 
-        // get initial game list
+        // get initial gameid list
         this.fetchGames();
     }
 
@@ -61,7 +59,7 @@ class App extends Component
 
     openGame(game)
     {
-        console.log("opening game " + game.name);
+        console.log("opening gameid " + game.name);
         this.server.get('/decks/' + game._id).then((res) =>
         {
             this.setState({activeGame: game, decklist: res.data});
@@ -83,17 +81,6 @@ class App extends Component
     closeDeck()
     {
         this.setState({activeDeck: null});
-    }
-
-    saveTest_create()
-    {
-        this.server.get('/savetest').then(this.fetchGames);
-
-    }
-
-    saveTest_execute()
-    {
-        this.server.post('/savetest').then(this.fetchGames);
     }
 
     render()
@@ -120,8 +107,6 @@ class App extends Component
                         :
                         <AllGamesList app={this}/>
                     }
-                    <button onClick={this.saveTest_create}>Create Save Test</button>
-                    <button onClick={this.saveTest_execute}>ExecuteSave Test</button>
                 </div>
             </div>
         );
