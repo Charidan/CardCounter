@@ -158,16 +158,18 @@ router.post('/deck/:deckid/putbottom/:cardid', (req, res) => {
             return;
         }
 
-        let card = Card.findOne({_id: mongoose.Types.ObjectId(req.params.cardid)});
-        if(card == null)
+        Card.findOne({_id: mongoose.Types.ObjectId(req.params.cardid)}).exec((err, card) =>
         {
-            fail("ERROR: attempt to place non-existant card in deck", res);
-            return;
-        }
-
-        deck.putOnBottom(card);
-        deck.markModified('cards');
-        deck.save((err) => err ? fail(err, res) : res.json(deck));
+            if(card == null)
+            {
+                fail("ERROR: attempt to place non-existant card in deck", res);
+                return;
+            }
+            
+            deck.putOnBottom(card);
+            deck.markModified('cards');
+            deck.save((err) => err ? fail(err, res) : res.json(deck));
+        });
     });
 });
 

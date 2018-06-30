@@ -181,7 +181,7 @@ class DeckDisplay extends React.Component
                 </table>
                 <div>
                     <button onClick={this.shuffle} disabled={this.state.app.state.locked}>Shuffle</button>
-                    <button onClick={this.drawCard} disabled={this.state.editing !== 0}>Draw</button>
+                    <button onClick={this.drawCard} disabled={this.state.editing !== false}>Draw</button>
                     {!this.state.drawnCard ? null :
                         <div>
                             Drawn Card: {this.state.drawnCard.value}
