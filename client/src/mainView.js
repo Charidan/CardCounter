@@ -7,8 +7,7 @@ class GameRow extends Component
         super(props);
         this.state = {
             app: props.app,
-            name: props.name,
-            id: props.id,
+            game: props.game,
         };
     }
 
@@ -17,13 +16,13 @@ class GameRow extends Component
         return (
             <tr>
                 <td>
-                    {this.state.id}
+                    {this.state.game.id}
                 </td>
                 <td>
-                    {this.state.name}
+                    {this.state.game.name}
                 </td>
                 <td>
-                    <button onClick={() => this.state.app.openGame(this.id)}>Open Game</button>
+                    <button onClick={() => this.state.app.openGame(this.state.game)}>Open Game</button>
                 </td>
             </tr>
         )
@@ -41,7 +40,7 @@ class AllGamesList extends React.Component
         };
 
         this.handleChange = this.handleChange.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
+        this.createGame = this.createGame.bind(this);
     }
 
     handleChange(event)
@@ -49,13 +48,13 @@ class AllGamesList extends React.Component
         this.setState({value: event.target.value});
     }
 
-    handleSubmit(event)
+    createGame(event)
     {
-        this.state.app.server.post("/games", {
+        let newgame = this.state.app.server.post("/games", {
             name: this.state.value,
         });
         this.setState({value: ''});
-        this.state.app.fetchGames();
+        this.app.setState((prevState) => ({gamelist: prevState.gamelist.push(newgame)}));
         event.preventDefault();
     }
 
@@ -63,31 +62,27 @@ class AllGamesList extends React.Component
     {
         return (
             <div className="mainsection">
-                <div>
-                    <h3>GAMES</h3>
-                    <table className="bordered">
-                        <thead>
-                        <tr>
-                            <th>id</th>
-                            <th>Game Name</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {this.state.app.state.gamelist.map((game, index) => <GameRow game={game} key={index} app={this.state.app} />)}
-                        </tbody>
-                    </table>
-                </div>
+                <h3>GAMES</h3>
+                <table className="bordered">
+                    <thead>
+                    <tr>
+                        <th>id</th>
+                        <th>Game Name</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {this.state.app.state.gamelist.map((game, index) => <GameRow game={game} key={index} app={this.state.app} />)}
+                    </tbody>
+                </table>
                 {this.state.app.state.locked ? null :
-                 <div>
-                     <form onSubmit={this.handleSubmit}>
-                         <br/>
-                         <label>
-                             Name:
-                             <input type="text" value={this.state.value} onChange={this.handleChange}/>
-                         </label>
-                         <input type="submit" value="Submit"/>
-                     </form>
-                 </div>
+                    <form onSubmit={this.createGame}>
+                        <br/>
+                        <label>
+                            Name:
+                            <input type="text" value={this.state.value} onChange={this.handleChange}/>
+                        </label>
+                        <input type="submit" value="Create Game"/>
+                    </form>
                 }
             </div>
         );

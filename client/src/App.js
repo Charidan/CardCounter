@@ -11,7 +11,9 @@ class App extends Component
     {
         super();
         this.state = {
+            // TODO gamelist should be in mainView.js and deckList should be in gameView.js
             gamelist : [],
+            decklist : [],
             activeGame : null,
             activeDeck : null,
             locked: true,
@@ -20,6 +22,19 @@ class App extends Component
             baseURL: 'http://localhost:2837/cardcounter',
             timeout: 10000,
         });
+
+        //bind fiesta
+        this.fetchGames         = this.fetchGames.bind(this);
+        this.doLock             = this.doLock.bind(this);
+        this.doUnlock           = this.doUnlock.bind(this);
+        this.openGame           = this.openGame.bind(this);
+        this.closeGame          = this.closeGame.bind(this);
+        this.openDeck           = this.openDeck.bind(this);
+        this.closeDeck          = this.closeDeck.bind(this);
+        this.saveTest_create    = this.saveTest_create.bind(this);
+        this.saveTest_execute   = this.saveTest_execute.bind(this);
+
+        // get initial game list
         this.fetchGames();
     }
 
@@ -46,7 +61,16 @@ class App extends Component
 
     openGame(game)
     {
-        this.setState({activeGame : game});
+        console.log("opening game " + game.name);
+        this.server.get('/decks/' + game._id).then((res) =>
+        {
+            this.setState({activeGame: game, decklist: res.data});
+        });
+    }
+
+    closeGame()
+    {
+        this.setState({activeGame: null, decklist: null});
     }
 
     openDeck(deck, game)
@@ -56,21 +80,27 @@ class App extends Component
         this.setState(newState);
     }
 
+    closeDeck()
+    {
+        this.setState({activeDeck: null});
+    }
+
     saveTest_create()
     {
-        this.server.get('/savetest');
-        this.fetchGames();
+        this.server.get('/savetest').then(this.fetchGames);
 
     }
 
     saveTest_execute()
     {
-        this.server.post('/savetest');
-        this.fetchGames();
+        this.server.post('/savetest').then(this.fetchGames);
     }
 
     render()
     {
+        console.log("RENDER STATE activeGame = ");
+        console.log(this.state.activeGame);
+
         return (
             <div className="App">
                 <div className="App-header">

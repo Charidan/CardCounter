@@ -39,9 +39,12 @@ router.use((req, res, next) => {
     next(); // permission granted
 });
 
-const about = (req, res) => { res.json({name: 'card-counter-server', displayName: 'About Page by Richard Nicholson', version: '0.0.1'})}
+const about = (req, res) => { res.json({name: 'card-counter-server', displayName: 'About Page by Richard Nicholson', version: '0.0.1'})};
 router.get('/', about);
 router.get('/about', about);
+
+// GET list games
+// POST create game
 router.route('/games')
       .get((req, res) => { Game.find().exec((err,ret) => (err ? fail(err) : res.json(ret))) })
       .post((req, res) => {
@@ -54,9 +57,18 @@ router.route('/games')
               game.save((err) => err ? fail(err, res) : res.json(game));
           })
       });
+
+// GET list all decks (across games)
+// POST create deck
 router.route('/decks')
       .get((req, res) => { Deck.find().exec((err,ret) => (err ? fail(err) : res.json(ret))) })
       .post((req, res) => {
+          let game = Game.findOne({_id: req.body.gameid});
+          if(game == null) {
+              fail("ERROR: attempt to create deck for non-existant game", res);
+              return;
+          }
+
           Deck.count().exec((err, ret) => {
               if(err) { fail(err, ret); return; }
               let id = ret + 1;
@@ -69,13 +81,92 @@ router.route('/decks')
               {
                   for(let i = req.body.rangeMin; i <= req.body.rangeMax; i++)
                   {
-                      deck.putOnBottom(new Card({value: i, gameid: req.body.gameid, deckid: id}));
+                      let card = new Card({value: i, gameid: req.body.gameid, deckid: id});
+                      deck.putOnBottom(card);
                   }
               }
 
-              deck.save((err) => err ? fail(err, res) : res.json(deck));
+              deck.markModified('cards');
+              return deck.save((err) => err ? fail(err, res) : res.json(deck));
           });
       });
+
+// GET list decks of specified game
+router.get('/decks/:gameid', (req,res) => { Deck.find({game: req.params.gameid}).exec((err,ret) => (err ? fail(err) : res.json(ret))) });
+
+// POST shuffle deck
+router.post('/deck/:deckid/shuffle', (req, res) => {
+    let deck = Deck.findOne({_id: req.params.deckid});
+    if(deck == null) {
+        fail("ERROR: attempt to shuffle non-existant deck", res);
+        return;
+    }
+
+    deck.shuffle();
+    deck.save((err) => err ? fail(err, res) : res.json(deck));
+});
+
+// POST draw a card from deck
+router.post('/deck/:deckid/draw', (req, res) => {
+    let deck = Deck.findOne({_id: req.params.deckid});
+    if(deck == null) {
+        fail("ERROR: attempt to shuffle non-existant deck", res);
+        return;
+    }
+
+    let card = deck.drawCard();
+    deck.markModified('cards');
+    deck.save();
+    res.json([card, deck]);
+});
+
+// POST put card by id on bottom of deck by id
+router.post('/deck/:deckid/putbottom/:cardid', (req, res) => {
+    let deck = Deck.findOne({_id: req.params.deckid});
+    if(deck == null) {
+        fail("ERROR: attempt to place card in non-existant deck", res);
+        return;
+    }
+
+    let card = Card.findOne({_id: req.params.cardid});
+    if(card == null) {
+        fail("ERROR: attempt to place non-existant card in deck", res);
+        return;
+    }
+
+    deck.putOnBottom(card);
+    deck.markModified('cards');
+    deck.save((err) => err ? fail(err, res) : res.json(deck));
+});
+
+// POST create card for deck, place on bottom
+router.post('/deck/:deckid/createbottom/', (req, res) =>{
+    let deck = Deck.findOne({_id: req.params.deckid});
+    if(deck == null) {
+        fail("ERROR: attempt to place card in non-existant deck");
+        return;
+    }
+
+    let card = new Card({value: i, gameid: deck.gameid, deckid: req.params.deckid});
+
+    deck.putOnBottom(card);
+    deck.markModified('cards');
+    deck.save((err) => err ? fail(err, res) : res.json(deck));
+});
+
+// POST update card
+router.post('/card/:cardid/update', (req, res) => {
+    let card = Card.findOne({_id: req.params.cardid});
+    if(card == null) {
+        fail("ERROR: attempt to update non-existant card", res);
+        return;
+    }
+
+    card.value = req.body.value;
+    card.save((err) => err ? fail(err, res) : res.json(card));
+});
+
+// TESTING STUFF THAT WILL EVENTUALLY BE DELETED
 
 var test_id = null;
 router.route('/savetest')
@@ -96,23 +187,38 @@ router.route('/savetest')
                   deck.id = id;
                   deck.gameid = game.id;
 
-                  for(let i = 1; i <= 10; i++)
+                  for(let i = 1; i <= 2; i++)
                   {
-                      deck.putOnBottom(new Card({value: i, gameid: game.id, deckid: id}));
+                      let card = new Card({value: i, gameid: game.id, deckid: id});
+                      deck.putOnBottom(card);
+                      card.save((err) => err ? fail(err, res) : res.json(card));
                   }
-              });
 
-              game.save((err) => err ? fail(err, res) : res.json(game));
+                  deck.save((err) => err ? fail(err, res) : res.json(deck));
+
+                  game.decks.push(deck);
+                  console.log("created deck: " + game.decks);
+                  game.save((err) => err ? fail(err, res) : res.json(game));
+              });
           });
       })
       .post((req,res) => {
-          let game = Game.findOne(test_id);
-          game.decks[0].cards[0].value = 999;
+          Game.findOne({id: test_id}).populate({path: 'decks', populate: { path: 'cards' }}).exec((err, game) =>
+          {
+              console.log("err = " + err + "\n\n");
+              console.log("GAME\n"+game);
+              game.decks[0].cards[0].value = 999;
+              console.log("DECK\n"+game.decks[0]);
+              console.log("CARDS\n"+game.decks[0].cards[0].value);
+              game.markModified('decks');
+              game.save();
+              //game.decks[0].cards[0].save();
+          });
       });
 
 /////////////////////////////////////////////////////////
 
 server.use('/cardcounter', router);
-const port = process.env.PORT || 2837
+const port = process.env.PORT || 2837;
 server.listen(port);
 console.log("CardCounter Server running on port "+port);

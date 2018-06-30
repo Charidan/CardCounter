@@ -2,9 +2,8 @@ const mongoose = require('mongoose');
 
 const cardSchema = new mongoose.Schema({
     value: Number,
-    id: Number,
-    gameid: Number,
-    deckid: Number,
+    game: { type: mongoose.Schema.Types.ObjectId, ref: 'Game' },
+    deck: { type: mongoose.Schema.Types.ObjectId, ref: 'Deck' },
     faceup: Boolean,
 });
 

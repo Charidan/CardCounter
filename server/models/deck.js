@@ -1,21 +1,25 @@
 const mongoose = require('mongoose');
-//const Card = require("./card").Card;
 
 const deckSchema = new mongoose.Schema({
     name: String,
     id: Number,
-    gameid: Number,
-    cards: Array,
+    game: { type: mongoose.Schema.Types.ObjectId, ref: 'Game' },
+    cards: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Card' }],
 });
 
-deckSchema.methods.draw = function()
+deckSchema.methods.drawCard = function()
 {
-    return this.cards.shift();
+    let card = this.cards.shift();
+    card.deck = null;
+    card.save();
+    return card;
 };
 
 deckSchema.methods.putOnBottom = function(card, faceup)
 {
     card.faceup = faceup ? faceup : false;
+    card.deck = this._id;
+    card.save();
     this.cards.push(card);
 };
 
