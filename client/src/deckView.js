@@ -33,8 +33,6 @@ class CardRow extends Component
 
     editCard()
     {
-        console.log("edit card state = ");
-        console.log(this.state);
         this.state.deckdisp.setState((prevState) => ({editing: prevState.editing + 1}));
         this.setState((prevState) => ({editing: true, editValue: prevState.card.value}));
     }
@@ -44,23 +42,12 @@ class CardRow extends Component
         this.state.app.server.post("/card/" + this.state.card._id, {}).then((res) => {
             let card = res.data;
             this.setState({editing: false, card: card});
-            this.state.deckdisp.setState((prevState) => ({editing: prevState.deckdisp.state.editing - 1}));
+            this.state.deckdisp.setState((prevState) => ({editing: prevState.editing - 1}));
         });
     }
 
     render()
     {
-        if(this.state.editing)
-        {
-            console.group();
-            console.log(this.state);
-            console.log(this.state.card);
-            console.log(this.state.card.value);
-            console.log(this.state.card.faceup);
-            console.log(this.state.editValue);
-            console.groupEnd();
-        }
-
         let colA = this.state.app.state.locked ?
                        null :
                        this.state.editing ?
@@ -97,7 +84,7 @@ class DeckDisplay extends React.Component
         this.state = {
             app: props.app,
             deck: props.deck,
-            editing: false,
+            editing: 0,
             drawnCard: null,
             newCardValue: '',
         };
@@ -162,6 +149,8 @@ class DeckDisplay extends React.Component
 
     render()
     {
+        console.log(this.state.editing);
+
         return (
             <div className="mainsection">
                 <button onClick={this.state.app.closeDeck}>Return to Game</button>
@@ -180,7 +169,7 @@ class DeckDisplay extends React.Component
                 </table>
                 <div>
                     <button onClick={this.shuffle} disabled={this.state.app.state.locked}>Shuffle</button>
-                    <button onClick={this.drawCard} disabled={this.state.editing !== false}>Draw</button>
+                    <button onClick={this.drawCard} disabled={this.state.editing !== 0}>Draw</button>
                     {!this.state.drawnCard ? null :
                         <div>
                             Drawn Card: {this.state.drawnCard.value}
