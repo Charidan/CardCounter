@@ -10,7 +10,7 @@ class CardRow extends Component
             card: props.card,
             deckdisp: props.deckdisp,
             editing: false,
-            editName: props.card.name,
+            editName: props.card.value,
         };
 
         this.handleChange   = this.handleChange.bind(this);
@@ -104,8 +104,8 @@ class DeckDisplay extends React.Component
         }).then((res) =>
         {
             let deck = res.data;
-            this.state.app.setState({activeDeck: deck});
-            this.setState({newCardValue: ''});
+            console.log(deck);
+            this.setState({newCardValue: '', deck: deck});
         });
 
         event.preventDefault();
@@ -144,9 +144,6 @@ class DeckDisplay extends React.Component
 
     render()
     {
-        console.log("newCardValue");
-        console.log(this.state.newCardValue);
-
         return (
             <div className="mainsection">
                 <button onClick={this.state.app.closeDeck}>Return to Game</button>

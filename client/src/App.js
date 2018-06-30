@@ -59,7 +59,6 @@ class App extends Component
 
     openGame(game)
     {
-        console.log("opening gameid " + game.name);
         this.server.get('/decks/' + game._id).then((res) =>
         {
             this.setState({activeGame: game, decklist: res.data});
@@ -73,9 +72,12 @@ class App extends Component
 
     openDeck(deck, game)
     {
-        let newState = {activeDeck : deck};
-        if(game) newState.activeGame = game;
-        this.setState(newState);
+        this.server.get('/deck/' + deck._id).then((res) =>
+        {
+            let newState = {activeDeck : res.data};
+            if(game) newState.activeGame = game;
+            this.setState(newState);
+        });
     }
 
     closeDeck()
@@ -85,9 +87,6 @@ class App extends Component
 
     render()
     {
-        console.log("RENDER STATE activeGame = ");
-        console.log(this.state.activeGame);
-
         return (
             <div className="App">
                 <div className="App-header">
