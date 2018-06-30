@@ -124,8 +124,6 @@ class DeckDisplay extends React.Component
         }).then((res) =>
         {
             let deck = res.data;
-            console.log("CREATE CARD");
-            console.log(deck);
             this.setState({newCardValue: '', deck: deck});
         });
 
@@ -178,7 +176,7 @@ class DeckDisplay extends React.Component
                     </tr>
                     </thead>
                     <tbody>
-                    {this.state.deck.cards.map((card, index) => <CardRow card={card} deckdisp={this} key={index} app={this.state.app} />)}
+                    {this.state.deck.cards.map((card, index) => <CardRow card={card} deckdisp={this} key={index.toString() + card._id} app={this.state.app} />)}
                     </tbody>
                 </table>
                 <div>
