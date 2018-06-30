@@ -10,7 +10,7 @@ class CardRow extends Component
             card: props.card,
             deckdisp: props.deckdisp,
             editing: false,
-            editName: props.card.value,
+            editValue: props.card.value,
         };
 
         this.handleChange   = this.handleChange.bind(this);
@@ -22,22 +22,26 @@ class CardRow extends Component
     {
         if(event.target.type === "checkbox")
         {
-            this.card.faceup = event.target.value;
-            this.forceUpdate();
+            let faceup = event.target.checked;
+            this.setState((prevState) => {
+                prevState.card.faceup = faceup;
+                return {card: prevState.card};
+            });
         }
-        else this.setState({editName: event.target.value})
+        else this.setState({editValue: event.target.value})
     }
 
     editCard()
     {
-        this.state.deckdisp.setState((prevState) => ({editing: prevState.deckdisp.state.editing + 1}));
-        this.setState({editing: true});
+        console.log("edit card state = ");
+        console.log(this.state);
+        this.state.deckdisp.setState((prevState) => ({editing: prevState.editing + 1}));
+        this.setState((prevState) => ({editing: true, editValue: prevState.card.value}));
     }
 
     updateCard()
     {
-
-        this.state.app.server.post("/card/" + this.state.card._id + "/update", {}).then((res) => {
+        this.state.app.server.post("/card/" + this.state.card._id, {}).then((res) => {
             let card = res.data;
             this.setState({editing: false, card: card});
             this.state.deckdisp.setState((prevState) => ({editing: prevState.deckdisp.state.editing - 1}));
@@ -46,10 +50,21 @@ class CardRow extends Component
 
     render()
     {
+        if(this.state.editing)
+        {
+            console.group();
+            console.log(this.state);
+            console.log(this.state.card);
+            console.log(this.state.card.value);
+            console.log(this.state.card.faceup);
+            console.log(this.state.editValue);
+            console.groupEnd();
+        }
+
         let colA = this.state.app.state.locked ?
                        null :
                        this.state.editing ?
-                           <td><input name="Face Up" type="checkbox" checked={this.state.card.faceup} onChange={this.handleChange}/></td>:
+                           <td>Face Up: <input name="faceup" type="checkbox" value={this.state.card.faceup} onChange={this.handleChange}/></td>:
                            <td colSpan="2"><button onClick={ this.editCard } disabled={this.state.deckdisp.state.drawnCard}>Edit Card</button></td>;
         let colB = this.state.app.state.locked ?
                        null :
@@ -60,7 +75,12 @@ class CardRow extends Component
         return (
             <tr>
                 <td>
-                    {this.state.card.faceup || this.state.card.editing ? this.state.card.value : "Facedown"}
+                    {this.state.editing ?
+                        <input type="text" name="editValue" value={this.state.editValue} onChange={this.handleChange} /> :
+                        this.state.card.faceup ?
+                            this.state.card.value :
+                            "Facedown"
+                    }
                 </td>
                 {colA}
                 {colB}
@@ -104,6 +124,7 @@ class DeckDisplay extends React.Component
         }).then((res) =>
         {
             let deck = res.data;
+            console.log("CREATE CARD");
             console.log(deck);
             this.setState({newCardValue: '', deck: deck});
         });

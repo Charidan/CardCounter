@@ -95,12 +95,12 @@ router.route('/decks')
 router.get('/decks/:gameid', (req,res) => { Deck.find({game: mongoose.Types.ObjectId(req.params.gameid)}).exec((err, ret) => (err ? fail(err) : res.json(ret))) });
 
 // GET decks by id
-router.get('/deck/:deckid', (req,res) => { Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, ret) => (err ? fail(err) : res.json(ret))) });
+router.get('/deck/:deckid', (req,res) => { Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').exec((err, ret) => (err ? fail(err) : res.json(ret))) });
 
 
 // POST shuffle deck
 router.post('/deck/:deckid/shuffle', (req, res) => {
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, ret) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').exec((err, ret) =>
     {
         if(err)
         {
@@ -122,7 +122,7 @@ router.post('/deck/:deckid/shuffle', (req, res) => {
 
 // POST draw a card from deck
 router.post('/deck/:deckid/draw', (req, res) => {
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, ret) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').exec((err, ret) =>
     {
         if(err)
         {
@@ -146,7 +146,7 @@ router.post('/deck/:deckid/draw', (req, res) => {
 
 // POST put card by id on bottom of deck by id
 router.post('/deck/:deckid/putbottom/:cardid', (req, res) => {
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid.toString())}).exec((err, ret) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid.toString())}).populate('cards').exec((err, ret) =>
     {
         if(err)
         {
@@ -176,7 +176,7 @@ router.post('/deck/:deckid/putbottom/:cardid', (req, res) => {
 
 // POST create card for deck, place on bottom
 router.post('/deck/:deckid/createbottom/', (req, res) =>{
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, ret) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').exec((err, ret) =>
     {
         if(err)
         {
@@ -200,26 +200,28 @@ router.post('/deck/:deckid/createbottom/', (req, res) =>{
 });
 
 // POST update card
-router.post('/card/:cardid/update', (req, res) => {
-    Card.findOne({_id: mongoose.Types.ObjectId(req.params.cardid)}).exec((err, ret) =>
-    {
-        if(err)
+router.route('/card/:cardid')
+    .get((req,res) => { Card.findOne({_id: mongoose.Types.ObjectId(req.params.cardid)}).exec((err, ret) => (err ? fail(err, res) : res.json(ret))) })
+    .post((req, res) => {
+        Card.findOne({_id: mongoose.Types.ObjectId(req.params.cardid)}).exec((err, ret) =>
         {
-            fail(err, res);
-            return;
-        }
+            if(err)
+            {
+                fail(err, res);
+                return;
+            }
 
-        let card = ret.data;
-        if(card == null)
-        {
-            fail("ERROR: attempt to update non-existant card", res);
-            return;
-        }
+            let card = ret.data;
+            if(card == null)
+            {
+                fail("ERROR: attempt to update non-existant card", res);
+                return;
+            }
 
-        card.value = req.body.value;
-        card.save((err) => err ? fail(err, res) : res.json(card));
+            card.value = req.body.value;
+            card.save((err) => err ? fail(err, res) : res.json(card));
+        });
     });
-});
 
 /////////////////////////////////////////////////////////
 
