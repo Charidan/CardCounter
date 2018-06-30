@@ -165,7 +165,7 @@ router.post('/deck/:deckid/putbottom/:cardid', (req, res) => {
                 fail("ERROR: attempt to place non-existant card in deck", res);
                 return;
             }
-            
+
             deck.putOnBottom(card);
             deck.markModified('cards');
             deck.save((err) => err ? fail(err, res) : res.json(deck));

@@ -101,7 +101,6 @@ class DeckDisplay extends React.Component
             drawnCard: null,
             newCardValue: '',
         };
-        // TODO make a cardlist and make decks not have cards in the schema
 
         this.handleChange = this.handleChange.bind(this);
         this.createCard = this.createCard.bind(this);
