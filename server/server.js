@@ -197,6 +197,7 @@ router.post('/deck/:deckid/createbottom/', (req, res) =>{
     });
 });
 
+// GET get card by id
 // POST update card
 router.route('/card/:cardid')
     .get((req,res) => { Card.findOne({_id: mongoose.Types.ObjectId(req.params.cardid)}).exec((err, ret) => (err ? fail(err, res) : res.json(ret))) })
@@ -219,6 +220,8 @@ router.route('/card/:cardid')
             card.save((err) => err ? fail(err, res) : res.json(card));
         });
     });
+
+router.post('/card/:cardid/destroy', (req,res) => { Card.deleteOne({_id: mongoose.Types.ObjectId(req.params.cardid)}).exec((err, ret) => (err ? fail(err, res) : res.json(ret))) });
 
 /////////////////////////////////////////////////////////
 

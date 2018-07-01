@@ -135,7 +135,10 @@ class DeckDisplay extends React.Component
 
     destroyDrawnCard()
     {
-        this.setState({drawnCard: null});
+        this.state.app.server.post("/card/" + this.state.drawnCard._id + "/destroy", {}).then(() =>
+        {
+            this.setState({drawnCard: null});
+        });
     }
 
     putDrawnCardOnBottom()
