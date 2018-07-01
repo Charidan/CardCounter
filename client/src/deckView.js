@@ -8,6 +8,7 @@ class CardRow extends Component
         this.state = {
             app: props.app,
             card: props.card,
+            index: props.index,
             deckdisp: props.deckdisp,
             editing: false,
             editValue: props.card.value,
@@ -48,29 +49,39 @@ class CardRow extends Component
 
     render()
     {
-        let colA = this.state.app.state.locked ?
-                       null :
-                       this.state.editing ?
-                           <td>Face Up: <input name="faceup" type="checkbox" value={this.state.card.faceup} onChange={this.handleChange}/></td>:
-                           <td colSpan="2"><button onClick={ this.editCard } disabled={this.state.deckdisp.state.drawnCard}>Edit Card</button></td>;
-        let colB = this.state.app.state.locked ?
-                       null :
-                       this.state.editing ?
-                            <td><button onClick={ this.updateCard }>Update Card</button></td> :
-                           null;
-
         return (
             <tr>
+                {this.state.app.state.locked ? null :
+                    <td>
+                        {this.state.index === 0 ?
+                             <i className="disabled fas fa-angle-up" /> :
+                             <i className="clickable fas fa-angle-up"   onClick={() => { this.state.deckdisp.moveCard(this.state.index, true) }} />
+                        }
+                        <br/>
+                        {this.state.index === this.state.deckdisp.state.deck.cards.length - 1 ?
+                             <i className="disabled fas fa-angle-down" /> :
+                             <i className="clickable fas fa-angle-down" onClick={() => { this.state.deckdisp.moveCard(this.state.index, false) }} />
+                        }
+                    </td>
+                }
                 <td>
                     {this.state.editing ?
                         <input type="text" name="editValue" value={this.state.editValue} onChange={this.handleChange} /> :
                         this.state.card.faceup ?
                             this.state.card.value :
-                            "Facedown"
+                        this.state.card.value//"Facedown"
                     }
                 </td>
-                {colA}
-                {colB}
+                {this.state.app.state.locked ?
+                    null :
+                     this.state.editing ?
+                         <td>
+                             Face Up: <input name="faceup" type="checkbox" value={this.state.card.faceup} onChange={this.handleChange}/>
+                             <button onClick={ this.updateCard }>Update Card</button>
+                         </td>
+                         :
+                         <td colSpan="2"><button onClick={ this.editCard } disabled={this.state.deckdisp.state.drawnCard}>Edit Card</button></td>
+                }
             </tr>
         )
     }
@@ -95,6 +106,7 @@ class DeckDisplay extends React.Component
         this.drawCard = this.drawCard.bind(this);
         this.destroyDrawnCard = this.destroyDrawnCard.bind(this);
         this.putDrawnCardOnBottom = this.putDrawnCardOnBottom.bind(this);
+        this.moveCard = this.moveCard.bind(this);
     }
 
     handleChange(event)
@@ -145,15 +157,22 @@ class DeckDisplay extends React.Component
     {
         this.state.app.server.post("/deck/" + this.state.deck._id + "/putbottom/" + this.state.drawnCard._id, {}).then((res) =>
         {
-            let deck = res.data;
-            this.setState({deck: deck, drawnCard: null});
+            this.setState({deck: res.data, drawnCard: null});
+        });
+    }
+
+    moveCard(cardIndex, up)
+    {
+        console.log("cardIndex = " + cardIndex);
+
+        this.state.app.server.post("/deck/" + this.state.deck._id + "/move/", { index: cardIndex, up: up}).then((res) =>
+        {
+            this.setState({deck: res.data});
         });
     }
 
     render()
     {
-        console.log(this.state.editing);
-
         return (
             <div className="mainsection">
                 <button onClick={this.state.app.closeDeck}>Return to Game</button>
@@ -161,13 +180,17 @@ class DeckDisplay extends React.Component
                 <table className="bordered">
                     <thead>
                     <tr>
-                        <th>id</th>
+                        {this.state.app.state.locked ? null :
+                            <th> </th> // up down arrows
+                        }
                         <th>Card Number</th>
-                        <th colSpan="2"> </th>
+                        {this.state.app.state.locked ? null :
+                         <th colSpan="2"> </th> // edit button || edit fields
+                        }
                     </tr>
                     </thead>
                     <tbody>
-                    {this.state.deck.cards.map((card, index) => <CardRow card={card} deckdisp={this} key={index.toString() + card._id} app={this.state.app} />)}
+                    {this.state.deck.cards.map((card, index) => <CardRow card={card} deckdisp={this} index={index} key={index.toString() + card._id} app={this.state.app} />)}
                     </tbody>
                 </table>
                 <div>
