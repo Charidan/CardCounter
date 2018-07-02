@@ -22,6 +22,7 @@ deckSchema.methods.putOnBottom = function(card, faceup)
     card.faceup = faceup ? faceup : false;
     card.deck = this._id;
     card.save();
+    this.drawnCard = null;
     this.cards.push(card);
 };
 

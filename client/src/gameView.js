@@ -37,9 +37,9 @@ class DeckRow extends Component
 
     destroyDrawnCard()
     {
-        this.state.app.server.post("/card/" + this.state.deck.drawnCard._id + "/destroy", {}).then(() =>
+        this.state.app.server.post("/deck/" + this.state.deck._id + "/destroyDrawnCard", {}).then((res) =>
         {
-            this.setState({drawnCard: null});
+            this.setState({deck: res.data});
         });
     }
 
@@ -47,7 +47,7 @@ class DeckRow extends Component
     {
         this.state.app.server.post("/deck/" + this.state.deck._id + "/putbottom/" + this.state.deck.drawnCard._id, {}).then((res) =>
         {
-            this.setState({deck: res.data, drawnCard: null});
+            this.setState({deck: res.data});
         });
     }
 
@@ -66,7 +66,7 @@ class DeckRow extends Component
                     <button onClick={this.shuffle} disabled={this.state.app.state.locked}>Shuffle</button>
                     <button onClick={this.drawCard} disabled={this.state.deck.drawnCard}>Draw</button>
                 </td>
-                {!this.state.deck.drawnCard ? null :
+                {this.state.deck.drawnCard == null ? null :
                  <td>
                      Drawn Card: {this.state.deck.drawnCard.value}
                      <button onClick={this.putDrawnCardOnBottom}>Place on Bottom</button>
@@ -163,11 +163,7 @@ class GameDisplay extends React.Component
                     <tr>
                         <th>id</th>
                         <th>Deck Name</th>
-                        <th> </th>
-                        {this.state.deck.drawnCard ?
-                            <th> </th> :
-                            null
-                        }
+                        <th colSpan="2"> </th>
                         {this.state.app.state.locked ? null :
                          <th> </th>
                         }

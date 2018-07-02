@@ -95,12 +95,12 @@ router.route('/decks')
 router.get('/decks/:gameid', (req,res) => { Deck.find({game: mongoose.Types.ObjectId(req.params.gameid)}).exec((err, ret) => (err ? fail(err) : res.json(ret))) });
 
 // GET deck by id
-router.get('/deck/:deckid', (req,res) => { Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').exec((err, ret) => (err ? fail(err) : res.json(ret))) });
+router.get('/deck/:deckid', (req,res) => { Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('drawnCard').exec((err, ret) => (err ? fail(err) : res.json(ret))) });
 
 
 // POST shuffle deck
 router.post('/deck/:deckid/shuffle', (req, res) => {
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').exec((err, deck) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('cards').exec((err, deck) =>
     {
         if(err)
         {
@@ -121,7 +121,7 @@ router.post('/deck/:deckid/shuffle', (req, res) => {
 
 // POST draw a card from deck
 router.post('/deck/:deckid/draw', (req, res) => {
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').exec((err, deck) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('cards').exec((err, deck) =>
     {
         if(err)
         {
@@ -143,7 +143,7 @@ router.post('/deck/:deckid/draw', (req, res) => {
 
 // POST put card by id on bottom of deck by id
 router.post('/deck/:deckid/putbottom/:cardid', (req, res) => {
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid.toString())}).populate('cards').exec((err, deck) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid.toString())}).populate('cards').populate('cards').exec((err, deck) =>
     {
         if(err)
         {
@@ -174,7 +174,7 @@ router.post('/deck/:deckid/putbottom/:cardid', (req, res) => {
 
 // POST create card for deck, place on bottom
 router.post('/deck/:deckid/createbottom/', (req, res) =>{
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').exec((err, deck) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('cards').exec((err, deck) =>
     {
         if(err)
         {
@@ -199,7 +199,7 @@ router.post('/deck/:deckid/createbottom/', (req, res) =>{
 // POST move card in deck by index
 router.post('/deck/:deckid/move/', (req, res) =>
 {
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').exec((err, deck) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('cards').exec((err, deck) =>
     {
         if(req.body.index <= 0 || req.body.index >= deck.cards.length) return;
 
@@ -216,11 +216,10 @@ router.post('/deck/:deckid/move/', (req, res) =>
 // POST delete a card from deck
 router.post('/deck/:deckid/deleteCard', (req, res) =>
 {
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').exec((err, deck) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('cards').exec((err, deck) =>
     {
         for(let i = 0; i < deck.cards.length; ++i)
         {
-            console.log("target = " + mongoose.Types.ObjectId(req.body.cardid) + " iter = " + deck.cards[i]._id);
             if(deck.cards[i]._id.equals(mongoose.Types.ObjectId(req.body.cardid)))
             {
                 deck.cards.splice(i, 1);
@@ -233,6 +232,20 @@ router.post('/deck/:deckid/deleteCard', (req, res) =>
         }
 
         fail("Error: Attempting to remove card " + req.body.cardid + " which is not in deck " + deck._id, res);
+    });
+});
+
+// POST delete a card from deck
+router.post('/deck/:deckid/destroyDrawnCard', (req, res) =>
+{
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('cards').exec((err, deck) =>
+    {
+        let card = deck.drawnCard;
+        deck.drawnCard = null;
+        deck.markModified('drawnCard');
+        deck.save((err) => {
+            Card.deleteOne({_id: card._id}, () => { err ? fail(err, res) : res.json(deck) });
+        });
     });
 });
 

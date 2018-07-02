@@ -50,7 +50,6 @@ class CardRow extends Component
 
     deleteCard()
     {
-        console.log(this.state);
         this.state.app.server.post("/deck/" + this.state.deckdisp.state.deck._id+ "/deleteCard/", { cardid: this.state.card._id }).then((res) => {
             this.state.deckdisp.setState((prevState) => ({deck: res.data, editing: prevState.editing - 1}));
         });
