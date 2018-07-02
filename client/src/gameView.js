@@ -80,7 +80,7 @@ class GameDisplay extends React.Component
                 prevState.decklist.push(deck);
                 return {decklist: prevState.decklist}
             });
-            this.setState({value: ''});
+            this.setState({nameEntry: ''});
         });
 
         event.preventDefault();
