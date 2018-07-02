@@ -17,6 +17,7 @@ class CardRow extends Component
         this.handleChange   = this.handleChange.bind(this);
         this.editCard       = this.editCard.bind(this);
         this.updateCard     = this.updateCard.bind(this);
+        this.deleteCard     = this.deleteCard.bind(this);
     }
 
     handleChange(event)
@@ -47,6 +48,14 @@ class CardRow extends Component
         });
     }
 
+    deleteCard()
+    {
+        console.log(this.state);
+        this.state.app.server.post("/deck/" + this.state.deckdisp.state.deck._id+ "/deleteCard/", { cardid: this.state.card._id }).then((res) => {
+            this.state.deckdisp.setState((prevState) => ({deck: res.data, editing: prevState.editing - 1}));
+        });
+    }
+
     render()
     {
         return (
@@ -67,9 +76,11 @@ class CardRow extends Component
                 <td>
                     {this.state.editing ?
                         <input type="text" name="editValue" value={this.state.editValue} onChange={this.handleChange} /> :
-                        this.state.card.faceup ?
+                        this.state.deckdisp.state.showCards ?
                             this.state.card.value :
-                        this.state.card.value//"Facedown"
+                            this.state.card.faceup ?
+                                this.state.card.value :
+                                "Facedown"
                     }
                 </td>
                 {this.state.app.state.locked ?
@@ -78,6 +89,7 @@ class CardRow extends Component
                          <td>
                              Face Up: <input name="faceup" type="checkbox" value={this.state.card.faceup} onChange={this.handleChange}/>
                              <button onClick={ this.updateCard }>Update Card</button>
+                             <button onClick={ this.deleteCard }>Delete Card</button>
                          </td>
                          :
                          <td colSpan="2"><button onClick={ this.editCard } disabled={this.state.deckdisp.state.drawnCard}>Edit Card</button></td>
@@ -98,6 +110,7 @@ class DeckDisplay extends React.Component
             editing: 0,
             drawnCard: null,
             newCardValue: '',
+            showCards: false,
         };
 
         this.handleChange = this.handleChange.bind(this);
@@ -111,7 +124,9 @@ class DeckDisplay extends React.Component
 
     handleChange(event)
     {
-        this.setState({newCardValue: event.target.value});
+        this.setState({
+            [event.target.name]: (event.target.type === 'checkbox' ? event.target.checked : event.target.value)
+        });
     }
 
     // create a card
@@ -163,8 +178,6 @@ class DeckDisplay extends React.Component
 
     moveCard(cardIndex, up)
     {
-        console.log("cardIndex = " + cardIndex);
-
         this.state.app.server.post("/deck/" + this.state.deck._id + "/move/", { index: cardIndex, up: up}).then((res) =>
         {
             this.setState({deck: res.data});
@@ -177,39 +190,50 @@ class DeckDisplay extends React.Component
             <div className="mainsection">
                 <button onClick={this.state.app.closeDeck}>Return to Game</button>
                 <h3>{this.state.deck.name}</h3>
-                <table className="bordered">
-                    <thead>
-                    <tr>
-                        {this.state.app.state.locked ? null :
-                            <th> </th> // up down arrows
-                        }
-                        <th>Card Number</th>
-                        {this.state.app.state.locked ? null :
-                         <th colSpan="2"> </th> // edit button || edit fields
-                        }
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {this.state.deck.cards.map((card, index) => <CardRow card={card} deckdisp={this} index={index} key={index.toString() + card._id} app={this.state.app} />)}
-                    </tbody>
-                </table>
                 <div>
                     <button onClick={this.shuffle} disabled={this.state.app.state.locked}>Shuffle</button>
                     <button onClick={this.drawCard} disabled={this.state.editing !== 0}>Draw</button>
                     {!this.state.drawnCard ? null :
-                        <div>
-                            Drawn Card: {this.state.drawnCard.value}
-                            <button onClick={this.putDrawnCardOnBottom}>Place on Bottom</button>
-                            <button onClick={this.destroyDrawnCard}>Destroy</button>
-                        </div>
+                     <div>
+                         Drawn Card: {this.state.drawnCard.value}
+                         <button onClick={this.putDrawnCardOnBottom}>Place on Bottom</button>
+                         <button onClick={this.destroyDrawnCard}>Destroy</button>
+                     </div>
                     }
                 </div>
+                Cards in deck: {this.state.deck.cards.length}
+                <br/>
+                {this.state.app.state.locked ?
+                 null :
+                 <div>
+                     Show Card Values: <input type="checkbox" name="showCards" value={this.state.showCards} onChange={this.handleChange} />
+                     <br/>
+                     <table className="bordered">
+                         <thead>
+                         <tr>
+                             {this.state.app.state.locked ? null :
+                              <th> </th> // up down arrows
+                             }
+                             <th>Card Number</th>
+                             {this.state.app.state.locked ? null :
+                              <th colSpan="2"> </th> // edit button || edit fields
+                             }
+                         </tr>
+                         </thead>
+                         <tbody>
+                         {this.state.deck.cards.map((card, index) => <CardRow card={card} deckdisp={this} index={index}
+                                                                              key={index.toString() + card._id}
+                                                                              app={this.state.app}/>)}
+                         </tbody>
+                     </table>
+                 </div>
+                }
                 {this.state.app.state.locked ? null :
                     <form onSubmit={this.createCard}>
                         <br/><br/>
                         <label>
                             Value:
-                            <input type="text" value={this.state.newCardValue} onChange={this.handleChange}/>
+                            <input type="text" name="newCardValue" value={this.state.newCardValue} onChange={this.handleChange}/>
                         </label>
                         <input type="submit" value="Create Card"/>
                     </form>

@@ -214,6 +214,30 @@ router.post('/deck/:deckid/move/', (req, res) =>
     });
 });
 
+// POST delete a card from deck
+router.post('/deck/:deckid/deleteCard', (req, res) =>
+{
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').exec((err, deck) =>
+    {
+        for(let i = 0; i < deck.cards.length; ++i)
+        {
+            console.log("target = " + mongoose.Types.ObjectId(req.body.cardid) + " iter = " + deck.cards[i]._id);
+            if(deck.cards[i]._id.equals(mongoose.Types.ObjectId(req.body.cardid)))
+            {
+                Card.deleteOne({_id: card._id}, () => {
+                    deck.cards.splice(i, 1);
+                    deck.markModified('cards');
+                    deck.save();
+                    res.json(deck);
+                });
+                return;
+            }
+        }
+
+        fail("Error: Attempting to remove card " + req.body.cardid + " which is not in deck " + deck._id, res);
+    });
+});
+
 // GET get card by id
 // POST update card
 router.route('/card/:cardid')

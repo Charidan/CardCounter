@@ -56,8 +56,6 @@ class AllGamesList extends React.Component
         }).then((res) => {
             let newgame = res.data;
 
-            console.log("newgame = " + newgame);
-
             this.setState({value: ''});
             this.state.app.setState((prevState) => {
                 prevState.gamelist.push(newgame);
