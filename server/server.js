@@ -224,11 +224,10 @@ router.post('/deck/:deckid/deleteCard', (req, res) =>
             console.log("target = " + mongoose.Types.ObjectId(req.body.cardid) + " iter = " + deck.cards[i]._id);
             if(deck.cards[i]._id.equals(mongoose.Types.ObjectId(req.body.cardid)))
             {
-                Card.deleteOne({_id: card._id}, () => {
-                    deck.cards.splice(i, 1);
-                    deck.markModified('cards');
-                    deck.save();
-                    res.json(deck);
+                deck.cards.splice(i, 1);
+                deck.markModified('cards');
+                deck.save((err) => {
+                    Card.deleteOne({_id: card._id}, () => { err ? fail(err, res) : res.json(deck) });
                 });
                 return;
             }
