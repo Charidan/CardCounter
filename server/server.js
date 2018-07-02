@@ -201,7 +201,7 @@ router.post('/deck/:deckid/move/', (req, res) =>
 {
     Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('cards').exec((err, deck) =>
     {
-        if(req.body.index <= 0 || req.body.index >= deck.cards.length) return;
+        if((req.body.index <= 0 && req.body.up) || (req.body.index >= deck.cards.length && !req.body.up)) return;
 
         let targetIndex = req.body.up ? req.body.index - 1 : req.body.index + 1;
         let swap = deck.cards[req.body.index];
@@ -222,7 +222,7 @@ router.post('/deck/:deckid/deleteCard', (req, res) =>
         {
             if(deck.cards[i]._id.equals(mongoose.Types.ObjectId(req.body.cardid)))
             {
-                deck.cards.splice(i, 1);
+                let card = deck.cards.splice(i, 1);
                 deck.markModified('cards');
                 deck.save((err) => {
                     Card.deleteOne({_id: card._id}, () => { err ? fail(err, res) : res.json(deck) });
@@ -268,7 +268,8 @@ router.route('/card/:cardid')
                 return;
             }
 
-            card.value = req.body.value;
+            card.value = req.body.card.value;
+            card.faceup = req.body.card.faceup;
             card.save((err) => err ? fail(err, res) : res.json(card));
         });
     });

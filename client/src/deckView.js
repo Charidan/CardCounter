@@ -41,7 +41,8 @@ class CardRow extends Component
 
     updateCard()
     {
-        this.state.app.server.post("/card/" + this.state.card._id, {}).then((res) => {
+        this.state.card.value = this.state.editValue;
+        this.state.app.server.post("/card/" + this.state.card._id, {card: this.state.card}).then((res) => {
             let card = res.data;
             this.setState({editing: false, card: card});
             this.state.deckdisp.setState((prevState) => ({editing: prevState.editing - 1}));
