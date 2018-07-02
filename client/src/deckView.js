@@ -92,7 +92,7 @@ class CardRow extends Component
                              <button onClick={ this.deleteCard }>Delete Card</button>
                          </td>
                          :
-                         <td colSpan="2"><button onClick={ this.editCard } disabled={this.state.deckdisp.state.drawnCard}>Edit Card</button></td>
+                         <td colSpan="2"><button onClick={ this.editCard }>Edit Card</button></td>
                 }
             </tr>
         )
@@ -108,17 +108,12 @@ class DeckDisplay extends React.Component
             app: props.app,
             deck: props.deck,
             editing: 0,
-            drawnCard: null,
             newCardValue: '',
             showCards: false,
         };
 
         this.handleChange = this.handleChange.bind(this);
         this.createCard = this.createCard.bind(this);
-        this.shuffle = this.shuffle.bind(this);
-        this.drawCard = this.drawCard.bind(this);
-        this.destroyDrawnCard = this.destroyDrawnCard.bind(this);
-        this.putDrawnCardOnBottom = this.putDrawnCardOnBottom.bind(this);
         this.moveCard = this.moveCard.bind(this);
     }
 
@@ -143,39 +138,6 @@ class DeckDisplay extends React.Component
         event.preventDefault();
     }
 
-    shuffle()
-    {
-        this.state.app.server.post("/deck/" + this.state.deck._id + "/shuffle", {}).then((res) =>
-        {
-            let deck = res.data;
-            this.setState({deck: deck});
-        });
-    }
-
-    drawCard()
-    {
-        this.state.app.server.post("/deck/" + this.state.deck._id + "/draw", {}).then((res) =>
-        {
-            this.setState({drawnCard: res.data[0], deck: res.data[1]});
-        });
-    }
-
-    destroyDrawnCard()
-    {
-        this.state.app.server.post("/card/" + this.state.drawnCard._id + "/destroy", {}).then(() =>
-        {
-            this.setState({drawnCard: null});
-        });
-    }
-
-    putDrawnCardOnBottom()
-    {
-        this.state.app.server.post("/deck/" + this.state.deck._id + "/putbottom/" + this.state.drawnCard._id, {}).then((res) =>
-        {
-            this.setState({deck: res.data, drawnCard: null});
-        });
-    }
-
     moveCard(cardIndex, up)
     {
         this.state.app.server.post("/deck/" + this.state.deck._id + "/move/", { index: cardIndex, up: up}).then((res) =>
@@ -190,17 +152,6 @@ class DeckDisplay extends React.Component
             <div className="mainsection">
                 <button onClick={this.state.app.closeDeck}>Return to Game</button>
                 <h3>{this.state.deck.name}</h3>
-                <div>
-                    <button onClick={this.shuffle} disabled={this.state.app.state.locked}>Shuffle</button>
-                    <button onClick={this.drawCard} disabled={this.state.editing !== 0}>Draw</button>
-                    {!this.state.drawnCard ? null :
-                     <div>
-                         Drawn Card: {this.state.drawnCard.value}
-                         <button onClick={this.putDrawnCardOnBottom}>Place on Bottom</button>
-                         <button onClick={this.destroyDrawnCard}>Destroy</button>
-                     </div>
-                    }
-                </div>
                 Cards in deck: {this.state.deck.cards.length}
                 <br/>
                 {this.state.app.state.locked ?
