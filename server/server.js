@@ -137,8 +137,7 @@ router.post('/deck/:deckid/draw', (req, res) => {
 
         let card = deck.drawCard();
         deck.markModified('cards');
-        deck.save();
-        res.json([card, deck]);
+        deck.save((err) => err ? fail(err, res) : res.json([card, deck]));
     });
 });
 

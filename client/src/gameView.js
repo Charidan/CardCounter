@@ -10,7 +10,6 @@ class DeckRow extends Component
             app: props.app,
             game: props.game,
             deck: props.deck,
-            drawnCard: null,
         };
 
         this.shuffle = this.shuffle.bind(this);
@@ -38,7 +37,7 @@ class DeckRow extends Component
 
     destroyDrawnCard()
     {
-        this.state.app.server.post("/card/" + this.state.drawnCard._id + "/destroy", {}).then(() =>
+        this.state.app.server.post("/card/" + this.state.deck.drawnCard._id + "/destroy", {}).then(() =>
         {
             this.setState({drawnCard: null});
         });
@@ -46,7 +45,7 @@ class DeckRow extends Component
 
     putDrawnCardOnBottom()
     {
-        this.state.app.server.post("/deck/" + this.state.deck._id + "/putbottom/" + this.state.drawnCard._id, {}).then((res) =>
+        this.state.app.server.post("/deck/" + this.state.deck._id + "/putbottom/" + this.state.deck.drawnCard._id, {}).then((res) =>
         {
             this.setState({deck: res.data, drawnCard: null});
         });
@@ -65,18 +64,18 @@ class DeckRow extends Component
                 <td>
                     Cards in deck: {this.state.deck.cards.length}
                     <button onClick={this.shuffle} disabled={this.state.app.state.locked}>Shuffle</button>
-                    <button onClick={this.drawCard} disabled={this.state.drawnCard}>Draw</button>
+                    <button onClick={this.drawCard} disabled={this.state.deck.drawnCard}>Draw</button>
                 </td>
-                {!this.state.drawnCard ? null :
+                {!this.state.deck.drawnCard ? null :
                  <td>
-                     Drawn Card: {this.state.drawnCard.value}
+                     Drawn Card: {this.state.deck.drawnCard.value}
                      <button onClick={this.putDrawnCardOnBottom}>Place on Bottom</button>
                      <button onClick={this.destroyDrawnCard}>Destroy</button>
                  </td>
                 }
                 {this.state.app.state.locked ? null :
                  <td>
-                     <button onClick={() => this.state.app.openDeck(this.state.deck, this.state.game)} disabled={this.state.drawnCard}>Edit Deck</button>
+                     <button onClick={() => this.state.app.openDeck(this.state.deck, this.state.game)} disabled={this.state.deck.drawnCard}>Edit Deck</button>
                  </td>
                 }
             </tr>
@@ -92,7 +91,6 @@ class GameDisplay extends React.Component
         this.state = {
             app: props.app,
             game: props.game,
-            drawnCard: null,
             nameEntry: '',
             rangeMin: '',
             rangeMax: '',
@@ -166,7 +164,7 @@ class GameDisplay extends React.Component
                         <th>id</th>
                         <th>Deck Name</th>
                         <th> </th>
-                        {this.state.drawnCard ?
+                        {this.state.deck.drawnCard ?
                             <th> </th> :
                             null
                         }

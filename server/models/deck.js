@@ -5,6 +5,7 @@ const deckSchema = new mongoose.Schema({
     id: Number,
     game: { type: mongoose.Schema.Types.ObjectId, ref: 'Game' },
     cards: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Card' }],
+    drawnCard: { type: mongoose.Schema.Types.ObjectId, ref: 'Card' },
 }, {
     usePushEach: true
 });
@@ -12,8 +13,7 @@ const deckSchema = new mongoose.Schema({
 deckSchema.methods.drawCard = function()
 {
     let card = this.cards.shift();
-    card.deck = null;
-    card.save();
+    this.drawnCard = card;
     return card;
 };
 
