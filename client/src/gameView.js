@@ -65,7 +65,9 @@ class DeckRow extends Component
                     {this.state.deck.cards.length}
                 </td>
                 <td>
-                    <button onClick={this.shuffle} disabled={this.state.app.state.locked}>Shuffle</button>
+                    {this.state.app.state.locked ? null :
+                     <button onClick={this.shuffle}>Shuffle</button>
+                    }
                     <button onClick={this.drawCard} disabled={this.state.deck.drawnCard}>Draw</button>
                 </td>
                 {this.state.deck.drawnCard == null ? null :
