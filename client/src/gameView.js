@@ -62,7 +62,9 @@ class DeckRow extends Component
                     {this.state.deck.name}
                 </td>
                 <td>
-                    Cards in deck: {this.state.deck.cards.length}
+                    {this.state.deck.cards.length}
+                </td>
+                <td>
                     <button onClick={this.shuffle} disabled={this.state.app.state.locked}>Shuffle</button>
                     <button onClick={this.drawCard} disabled={this.state.deck.drawnCard}>Draw</button>
                 </td>
@@ -163,6 +165,7 @@ class GameDisplay extends React.Component
                     <tr>
                         <th>id</th>
                         <th>Deck Name</th>
+                        <th>Cards</th>
                         <th colSpan="2"> </th>
                         {this.state.app.state.locked ? null :
                          <th> </th>
