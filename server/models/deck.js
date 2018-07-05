@@ -6,6 +6,19 @@ const deckSchema = new mongoose.Schema({
     game: { type: mongoose.Schema.Types.ObjectId, ref: 'Game' },
     cards: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Card' }],
     drawnCard: { type: mongoose.Schema.Types.ObjectId, ref: 'Card' },
+
+    // deck settings
+
+    showCardsLocked: Boolean,
+
+    // legal actions
+    legalDraw: Boolean,
+    legalShuffle: Boolean,
+    legalDestroy: Boolean,
+    legalPutOnBottom: Boolean,
+
+
+
 }, {
     usePushEach: true
 });

@@ -41,6 +41,8 @@ class CardRow extends Component
 
     updateCard()
     {
+        // we mutate the card in state because we're about to reset it
+        // eslint-disable-next-line
         this.state.card.value = this.state.editValue;
         this.state.app.server.post("/card/" + this.state.card._id, {card: this.state.card}).then((res) => {
             let card = res.data;
@@ -76,7 +78,7 @@ class CardRow extends Component
                 <td>
                     {this.state.editing ?
                         <input type="text" name="editValue" value={this.state.editValue} onChange={this.handleChange} /> :
-                        this.state.deckdisp.state.showCards ?
+                        this.state.deckdisp.state.showCards || this.state.deckdisp.state.deck.showCardsLocked ?
                             this.state.card.value :
                             this.state.card.faceup ?
                                 this.state.card.value :
@@ -113,14 +115,23 @@ class DeckDisplay extends React.Component
         };
 
         this.handleChange = this.handleChange.bind(this);
+        this.updateSetting = this.updateSetting.bind(this);
         this.createCard = this.createCard.bind(this);
         this.moveCard = this.moveCard.bind(this);
     }
 
     handleChange(event)
     {
-        this.setState({
+        this.setState({[event.target.name]: (event.target.type === 'checkbox' ? event.target.checked : event.target.value)});
+    }
+
+    updateSetting(event)
+    {
+        this.state.app.server.post("/deck/" + this.state.deck._id + "/updateSetting/", {
             [event.target.name]: (event.target.type === 'checkbox' ? event.target.checked : event.target.value)
+        }).then((res) =>
+        {
+            this.setState({deck: res.data});
         });
     }
 
@@ -157,7 +168,23 @@ class DeckDisplay extends React.Component
                 {this.state.app.state.locked ?
                  null :
                  <div>
-                     Show Card Values: <input type="checkbox" name="showCards" value={this.state.showCards} onChange={this.handleChange} />
+                     <div className="smallborder">
+                         SETTINGS
+                         <br/>
+                         Can draw: <input type="checkbox" name="legalDraw" checked={this.state.deck.legalDraw} onChange={this.updateSetting} />
+                         <br/>
+                         Can shuffle: <input type="checkbox" name="legalShuffle" checked={this.state.deck.legalShuffle} onChange={this.updateSetting} />
+                         <br/>
+                         Can destroy: <input type="checkbox" name="legalDestroy" checked={this.state.deck.legalDestroy} onChange={this.updateSetting} />
+                         <br/>
+                         Can put on bottom: <input type="checkbox" name="legalPutOnBottom" checked={this.state.deck.legalPutOnBottom} onChange={this.updateSetting} />
+                         <br/>
+                         Show Card Values: <input type="checkbox" name="showCardsLocked" checked={this.state.deck.showCardsLocked} onChange={this.updateSetting} />
+                         {this.state.deck.showCardsLocked ? null :
+                          ["Show cards while editing: ", <input type="checkbox" name="showCards" checked={this.state.showCards} onChange={this.handleChange} />]
+                         }
+                         <br/>
+                     </div>
                      <br/>
                      <table className="bordered">
                          <thead>

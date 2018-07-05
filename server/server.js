@@ -249,6 +249,29 @@ router.post('/deck/:deckid/destroyDrawnCard', (req, res) =>
     });
 });
 
+// POST create card for deck, place on bottom
+router.post('/deck/:deckid/updateSetting/', (req, res) =>{
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, deck) =>
+    {
+        if(err)
+        {
+            fail(err, res);
+            return;
+        }
+
+        if(deck == null)
+        {
+            fail("ERROR: attempt to update setting of non-existant deck", res);
+            return;
+        }
+
+        // the save() will auto-validate our fields if they fail to match the schema
+        Object.assign(deck, req.body);
+
+        deck.save((err) => err ? fail(err, res) : res.json(deck));
+    });
+});
+
 // GET get card by id
 // POST update card
 router.route('/card/:cardid')

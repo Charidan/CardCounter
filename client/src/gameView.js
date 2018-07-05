@@ -65,16 +65,26 @@ class DeckRow extends Component
                     {this.state.deck.cards.length}
                 </td>
                 <td>
-                    {this.state.app.state.locked ? null :
+                    {!this.state.app.state.locked && this.state.deck.legalShuffle ?
                      <button onClick={this.shuffle}>Shuffle</button>
+                     : null
                     }
-                    <button onClick={this.drawCard} disabled={this.state.deck.drawnCard}>Draw</button>
+                    {this.state.deck.legalDraw ?
+                     <button onClick={this.drawCard} disabled={this.state.deck.drawnCard}>Draw</button>
+                     : null
+                    }
                 </td>
                 {this.state.deck.drawnCard == null ? null :
                  <td>
                      Drawn Card: {this.state.deck.drawnCard.value}
-                     <button onClick={this.putDrawnCardOnBottom}>Place on Bottom</button>
-                     <button onClick={this.destroyDrawnCard}>Destroy</button>
+                     {this.state.deck.legalPutOnBottom ?
+                      <button onClick={this.putDrawnCardOnBottom}>Place on Bottom</button>
+                      : null
+                     }
+                     {this.state.deck.legalDestroy ?
+                      <button onClick={this.destroyDrawnCard}>Destroy</button>
+                      : null
+                     }
                  </td>
                 }
                 {this.state.app.state.locked ? null :

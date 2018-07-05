@@ -83,6 +83,7 @@ class App extends Component
     closeDeck()
     {
         this.setState({activeDeck: null});
+        this.openGame(this.state.activeGame);
     }
 
     render()
