@@ -64,7 +64,7 @@ class DeckRow extends Component
                 <td>
                     {this.state.deck.cards.length}
                 </td>
-                <td>
+                <td colSpan={this.state.deck.drawnCard == null ? "2" : "1"}>{/* fill other column if drawn card will be null */}
                     {!this.state.app.state.locked && this.state.deck.legalShuffle ?
                      <button onClick={this.shuffle}>Shuffle</button>
                      : null
@@ -87,11 +87,9 @@ class DeckRow extends Component
                      }
                  </td>
                 }
-                {this.state.app.state.locked ? null :
-                 <td>
-                     <button onClick={() => this.state.app.openDeck(this.state.deck, this.state.game)} disabled={this.state.deck.drawnCard}>Edit Deck</button>
-                 </td>
-                }
+                <td>
+                    <button onClick={() => this.state.app.openDeck(this.state.deck, this.state.game)} disabled={this.state.deck.drawnCard}>Open Deck</button>
+                </td>
             </tr>
         )
     }
@@ -178,14 +176,12 @@ class GameDisplay extends React.Component
                         <th>id</th>
                         <th>Deck Name</th>
                         <th>Cards</th>
-                        <th colSpan="2"> </th>
-                        {this.state.app.state.locked ? null :
-                         <th> </th>
-                        }
+                        <th colSpan="2"> </th>{/* shuffle/draw | drawn card */}
+                        <th> </th>{/* open deck */}
                     </tr>
                     </thead>
                     <tbody>
-                    {this.state.app.state.decklist.map((deck, index) => <DeckRow game={this.state.game} deck={deck} key={index} app={this.state.app} />)}
+                    {this.state.app.state.decklist.map((deck, index) => <DeckRow game={this.state.game} deck={deck} key={index.toString() + deck._id.toString()} app={this.state.app} />)}
                     </tbody>
                 </table>
                 {this.state.app.state.locked ? null :

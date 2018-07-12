@@ -79,7 +79,7 @@ class AllGamesList extends React.Component
                     </tr>
                     </thead>
                     <tbody>
-                    {this.state.app.state.gamelist.map((game, index) => <GameRow game={game} key={index} app={this.state.app} />)}
+                    {this.state.app.state.gamelist.map((game, index) => <GameRow game={game} key={index.toString() + game._id.toString()} app={this.state.app} />)}
                     </tbody>
                 </table>
                 {this.state.app.state.locked ? null :

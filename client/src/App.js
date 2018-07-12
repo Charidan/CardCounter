@@ -57,11 +57,12 @@ class App extends Component
         this.setState({locked: false});
     }
 
-    openGame(game)
+    openGame(game, callback)
     {
         this.server.get('/decks/' + game._id).then((res) =>
         {
             this.setState({activeGame: game, decklist: res.data});
+            if(callback) callback();
         });
     }
 
@@ -82,8 +83,7 @@ class App extends Component
 
     closeDeck()
     {
-        this.setState({activeDeck: null});
-        this.openGame(this.state.activeGame);
+        this.openGame(this.state.activeGame, this.setState.bind(this, {activeDeck: null}));
     }
 
     render()

@@ -167,44 +167,45 @@ class DeckDisplay extends React.Component
                 <br/>
                 {this.state.app.state.locked ?
                  null :
-                 <div>
-                     <div className="smallborder">
-                         SETTINGS
-                         <br/>
-                         Can draw: <input type="checkbox" name="legalDraw" checked={this.state.deck.legalDraw} onChange={this.updateSetting} />
-                         <br/>
-                         Can shuffle: <input type="checkbox" name="legalShuffle" checked={this.state.deck.legalShuffle} onChange={this.updateSetting} />
-                         <br/>
-                         Can destroy: <input type="checkbox" name="legalDestroy" checked={this.state.deck.legalDestroy} onChange={this.updateSetting} />
-                         <br/>
-                         Can put on bottom: <input type="checkbox" name="legalPutOnBottom" checked={this.state.deck.legalPutOnBottom} onChange={this.updateSetting} />
-                         <br/>
-                         Show Card Values: <input type="checkbox" name="showCardsLocked" checked={this.state.deck.showCardsLocked} onChange={this.updateSetting} />
-                         {this.state.deck.showCardsLocked ? null :
-                          ["Show cards while editing: ", <input type="checkbox" name="showCards" checked={this.state.showCards} onChange={this.handleChange} />]
-                         }
-                         <br/>
-                     </div>
+                 <div className="smallborder">
+                     SETTINGS
                      <br/>
-                     <table className="bordered">
-                         <thead>
-                         <tr>
-                             {this.state.app.state.locked ? null :
-                              <th> </th> // up down arrows
-                             }
-                             <th>Card Number</th>
-                             {this.state.app.state.locked ? null :
-                              <th colSpan="2"> </th> // edit button || edit fields
-                             }
-                         </tr>
-                         </thead>
-                         <tbody>
-                         {this.state.deck.cards.map((card, index) => <CardRow card={card} deckdisp={this} index={index}
-                                                                              key={index.toString() + card._id}
-                                                                              app={this.state.app}/>)}
-                         </tbody>
-                     </table>
+                     Can draw: <input type="checkbox" name="legalDraw" checked={this.state.deck.legalDraw} onChange={this.updateSetting} />
+                     <br/>
+                     Can shuffle: <input type="checkbox" name="legalShuffle" checked={this.state.deck.legalShuffle} onChange={this.updateSetting} />
+                     <br/>
+                     Can destroy: <input type="checkbox" name="legalDestroy" checked={this.state.deck.legalDestroy} onChange={this.updateSetting} />
+                     <br/>
+                     Can put on bottom: <input type="checkbox" name="legalPutOnBottom" checked={this.state.deck.legalPutOnBottom} onChange={this.updateSetting} />
+                     <br/>
+                     Show Card Values: <input type="checkbox" name="showCardsLocked" checked={this.state.deck.showCardsLocked} onChange={this.updateSetting} />
+                     {this.state.deck.showCardsLocked ? null :
+                      ["Show cards while editing: ", <input type="checkbox" name="showCards" checked={this.state.showCards} onChange={this.handleChange} />]
+                     }
+                     <br/>
                  </div>
+                 }
+                 <br/>
+                 {this.state.app.state.locked && !this.state.deck.showCardsLocked ?
+                  null :
+                  <table className="bordered">
+                      <thead>
+                      <tr>
+                          {this.state.app.state.locked ? null :
+                           <th> </th> // up down arrows
+                          }
+                          <th>Value</th>
+                          {this.state.app.state.locked ? null :
+                           <th colSpan="2"> </th> // edit button || edit fields
+                          }
+                      </tr>
+                      </thead>
+                      <tbody>
+                      {this.state.deck.cards.map((card, index) => <CardRow card={card} deckdisp={this} index={index}
+                                                                           key={index.toString() + card._id.toString()}
+                                                                           app={this.state.app}/>)}
+                      </tbody>
+                  </table>
                 }
                 {this.state.app.state.locked ? null :
                     <form onSubmit={this.createCard}>
