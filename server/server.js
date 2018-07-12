@@ -251,7 +251,7 @@ router.post('/deck/:deckid/destroyDrawnCard', (req, res) =>
 
 // POST create card for deck, place on bottom
 router.post('/deck/:deckid/updateSetting/', (req, res) =>{
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, deck) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('cards').exec((err, deck) =>
     {
         if(err)
         {
