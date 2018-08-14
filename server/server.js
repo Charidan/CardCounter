@@ -58,6 +58,43 @@ router.route('/games')
           })
       });
 
+// POST clone game (ostensibly from template)
+router.post('/game/clone/', (req, res) => {
+    Game.findOne({_id: mongoose.Types.ObjectId(req.body.gameid)}).populate('decks').exec((err,game) =>
+    {
+        if(err) { fail(err, res); return; }
+        if(game == null)
+        {
+            fail("ERROR: attempt to clone non-existant game with id = " + req.body.gameid, res);
+            return;
+        }
+
+        let clone = prepObjToDeepCopy(game);
+        game.isTemplate = false;
+        clone.save((err) => err ? fail(err, res) : res.json(clone));
+    });
+});
+
+// POST set game as template (or not)
+router.post('/game/:gameid/setTemplate', (req, res) => {
+    Game.findOne({_id: mongoose.Types.ObjectId(req.params.gameid)}).populate('decks').exec((err,game) =>
+    {
+        if(err) { fail(err, res); return; }
+        if(game == null)
+        {
+            fail("ERROR: attempt to set template status of non-existant game with id = " + req.params.gameid, res);
+            return;
+        }
+
+        console.log("setting template status to " + req.params.isTemplate);
+        console.log(game);
+
+        game.isTemplate = req.body.isTemplate;
+
+        game.save((err) => err ? fail(err, res) : res.json(game));
+    });
+});
+
 // GET list all decks (across games)
 // POST create deck
 router.route('/decks')
