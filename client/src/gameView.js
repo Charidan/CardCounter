@@ -127,7 +127,7 @@ class GameDisplay extends React.Component
 
     handleTemplateChange(event)
     {
-        this.state.app.server.post("/game/" + this.state.game._id + "/setTemplate", {isTemplate: event.checked}).then((res) =>
+        this.state.app.server.post("/game/" + this.state.game._id + "/setTemplate", {isTemplate: event.target.checked}).then((res) =>
         {
             this.setState({game: res.data});
         });
@@ -182,7 +182,7 @@ class GameDisplay extends React.Component
                 {this.state.app.state.locked ? null :
                  <label>
                      Is Template:
-                     <input type="checkbox" name='isTemplate' value={this.state.game.isTemplate} onChange={this.handleTemplateChange}/>
+                     <input type="checkbox" name='isTemplate' checked={this.state.game.isTemplate} onChange={this.handleTemplateChange}/>
                  </label>
                 }
                 <table className="bordered">
