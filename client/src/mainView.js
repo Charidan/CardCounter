@@ -30,6 +30,33 @@ class GameRow extends Component
     }
 }
 
+class TemplateRow extends Component
+{
+    constructor(props)
+    {
+        super(props);
+        this.state = {
+            app: props.app,
+            game: props.game,
+        };
+    }
+
+    render()
+    {
+        return (
+            <tr>
+                <td>
+                    {this.state.game.name}
+                </td>
+                <td>
+                    <button onClick={() => this.state.app.openGame(this.state.game)}>Edit Template</button>
+                    <button onClick={() => this.state.app.cloneGame(this.state.game)}>Clone Game</button>
+                </td>
+            </tr>
+        )
+    }
+}
+
 class AllGamesList extends React.Component
 {
     constructor(props)
