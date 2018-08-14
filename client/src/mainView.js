@@ -119,6 +119,19 @@ class AllGamesList extends React.Component
                         <input type="submit" value="Create Game"/>
                     </form>
                 }
+                {this.state.app.state.locked ? null : <h3>Templates</h3>}
+                {this.state.app.state.locked ? null :
+                 <table className="bordered">
+                     <thead>
+                     <tr>
+                         <th>Name</th>
+                     </tr>
+                     </thead>
+                     <tbody>
+                     {this.state.app.state.gamelist.map( (game, index) => (!game.isTemplate ? null : <TemplateRow game={game} key={index.toString() + game._id.toString()} app={this.state.app} />) )}
+                     </tbody>
+                 </table>
+                }
             </div>
         );
     }
