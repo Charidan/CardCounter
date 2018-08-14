@@ -81,7 +81,8 @@ router.route('/decks')
               {
                   for(let i = req.body.rangeMin; i <= req.body.rangeMax; i++)
                   {
-                      let card = new Card({value: i, game: req.body.gameid, deckid: id});
+                      let card = new Card({_id: mongoose.Types.ObjectId(), value: i, game: req.body.gameid, deckid: id});
+                      console.log(card._id);
                       deck.putOnBottom(card);
                   }
               }
@@ -95,12 +96,12 @@ router.route('/decks')
 router.get('/decks/:gameid', (req,res) => { Deck.find({game: mongoose.Types.ObjectId(req.params.gameid)}).exec((err, ret) => (err ? fail(err) : res.json(ret))) });
 
 // GET deck by id
-router.get('/deck/:deckid', (req,res) => { Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('drawnCard').exec((err, ret) => (err ? fail(err) : res.json(ret))) });
+router.get('/deck/:deckid', (req,res) => { Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, ret) => (err ? fail(err) : res.json(ret))) });
 
 
 // POST shuffle deck
 router.post('/deck/:deckid/shuffle', (req, res) => {
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('cards').exec((err, deck) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, deck) =>
     {
         if(err)
         {
@@ -115,13 +116,14 @@ router.post('/deck/:deckid/shuffle', (req, res) => {
         }
 
         deck.shuffle();
+        deck.markModified('cards');
         deck.save((err) => err ? fail(err, res) : res.json(deck));
     });
 });
 
 // POST draw a card from deck
 router.post('/deck/:deckid/draw', (req, res) => {
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('cards').exec((err, deck) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, deck) =>
     {
         if(err)
         {
@@ -142,8 +144,8 @@ router.post('/deck/:deckid/draw', (req, res) => {
 });
 
 // POST put card by id on bottom of deck by id
-router.post('/deck/:deckid/putbottom/:cardid', (req, res) => {
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid.toString())}).populate('cards').populate('cards').exec((err, deck) =>
+router.post('/deck/:deckid/putbottom/drawn', (req, res) => {
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid.toString())}).exec((err, deck) =>
     {
         if(err)
         {
@@ -157,24 +159,16 @@ router.post('/deck/:deckid/putbottom/:cardid', (req, res) => {
             return;
         }
 
-        Card.findOne({_id: mongoose.Types.ObjectId(req.params.cardid)}).exec((err, card) =>
-        {
-            if(card == null)
-            {
-                fail("ERROR: attempt to place non-existant card in deck", res);
-                return;
-            }
-
-            deck.putOnBottom(card);
-            deck.markModified('cards');
-            deck.save((err) => err ? fail(err, res) : res.json(deck));
-        });
+        deck.putOnBottom(deck.drawnCard);
+        deck.drawnCard = null;
+        deck.markModified('cards');
+        deck.save((err) => err ? fail(err, res) : res.json(deck));
     });
 });
 
 // POST create card for deck, place on bottom
 router.post('/deck/:deckid/createbottom/', (req, res) =>{
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('cards').exec((err, deck) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, deck) =>
     {
         if(err)
         {
@@ -188,7 +182,7 @@ router.post('/deck/:deckid/createbottom/', (req, res) =>{
             return;
         }
 
-        let card = new Card({value: req.body.value, game: deck.game, deckid: req.params.deckid});
+        let card = new Card({_id: mongoose.Types.ObjectId(), value: req.body.value, game: deck.game, deckid: req.params.deckid});
 
         deck.putOnBottom(card);
         deck.markModified('cards');
@@ -199,7 +193,7 @@ router.post('/deck/:deckid/createbottom/', (req, res) =>{
 // POST move card in deck by index
 router.post('/deck/:deckid/move/', (req, res) =>
 {
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('cards').exec((err, deck) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, deck) =>
     {
         if((req.body.index <= 0 && req.body.up) || (req.body.index >= deck.cards.length && !req.body.up)) return;
 
@@ -216,7 +210,7 @@ router.post('/deck/:deckid/move/', (req, res) =>
 // POST delete a card from deck
 router.post('/deck/:deckid/deleteCard', (req, res) =>
 {
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('cards').exec((err, deck) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, deck) =>
     {
         for(let i = 0; i < deck.cards.length; ++i)
         {
@@ -224,9 +218,7 @@ router.post('/deck/:deckid/deleteCard', (req, res) =>
             {
                 let card = deck.cards.splice(i, 1);
                 deck.markModified('cards');
-                deck.save((err) => {
-                    Card.deleteOne({_id: card._id}, () => { err ? fail(err, res) : res.json(deck) });
-                });
+                deck.save((err) => err ? fail(err, res) : res.json(deck));
                 return;
             }
         }
@@ -238,20 +230,17 @@ router.post('/deck/:deckid/deleteCard', (req, res) =>
 // POST delete a card from deck
 router.post('/deck/:deckid/destroyDrawnCard', (req, res) =>
 {
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('cards').exec((err, deck) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, deck) =>
     {
-        let card = deck.drawnCard;
         deck.drawnCard = null;
         deck.markModified('drawnCard');
-        deck.save((err) => {
-            Card.deleteOne({_id: card._id}, () => { err ? fail(err, res) : res.json(deck) });
-        });
+        deck.save((err) => err ? fail(err, res) : res.json(deck));
     });
 });
 
 // POST create card for deck, place on bottom
 router.post('/deck/:deckid/updateSetting/', (req, res) =>{
-    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).populate('cards').populate('cards').exec((err, deck) =>
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, deck) =>
     {
         if(err)
         {
@@ -272,12 +261,12 @@ router.post('/deck/:deckid/updateSetting/', (req, res) =>{
     });
 });
 
-// GET get card by id
+// GET get card by index
 // POST update card
-router.route('/card/:cardid')
-    .get((req,res) => { Card.findOne({_id: mongoose.Types.ObjectId(req.params.cardid)}).exec((err, ret) => (err ? fail(err, res) : res.json(ret))) })
+router.route('/deck/card/:index')
+    .get((req,res) => { Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, deck) => (err ? fail(err, res) : res.json(deck.cards[req.params.index]))) })
     .post((req, res) => {
-        Card.findOne({_id: mongoose.Types.ObjectId(req.params.cardid)}).exec((err, card) =>
+        Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, deck) =>
         {
             if(err)
             {
@@ -285,19 +274,17 @@ router.route('/card/:cardid')
                 return;
             }
 
-            if(card == null)
+            if(deck == null)
             {
                 fail("ERROR: attempt to update non-existant card", res);
                 return;
             }
 
-            card.value = req.body.card.value;
-            card.faceup = req.body.card.faceup;
-            card.save((err) => err ? fail(err, res) : res.json(card));
+            deck.cards[req.params.index].value = req.body.card.value;
+            deck.cards[req.params.index].faceup = req.body.card.faceup;
+            deck.save((err) => err ? fail(err, res) : res.json(deck));
         });
     });
-
-router.post('/card/:cardid/destroy', (req,res) => { Card.deleteOne({_id: mongoose.Types.ObjectId(req.params.cardid)}).exec((err, ret) => (err ? fail(err, res) : res.json(ret))) });
 
 /////////////////////////////////////////////////////////
 

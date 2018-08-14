@@ -44,7 +44,7 @@ class CardRow extends Component
         // we mutate the card in state because we're about to reset it
         // eslint-disable-next-line
         this.state.card.value = this.state.editValue;
-        this.state.app.server.post("/card/" + this.state.card._id, {card: this.state.card}).then((res) => {
+        this.state.app.server.post("/deck/card/" + this.state.index, {card: this.state.card}).then((res) => {
             let card = res.data;
             this.setState({editing: false, card: card});
             this.state.deckdisp.setState((prevState) => ({editing: prevState.editing - 1}));
@@ -78,7 +78,7 @@ class CardRow extends Component
                 <td>
                     {this.state.editing ?
                         <input type="text" name="editValue" value={this.state.editValue} onChange={this.handleChange} /> :
-                        this.state.deckdisp.state.showCards || this.state.deckdisp.state.deck.showCardsLocked ?
+                        this.state.deckdisp.state.deck.showCardsEditing || this.state.deckdisp.state.deck.showCardsLocked ?
                             this.state.card.value :
                             this.state.card.faceup ?
                                 this.state.card.value :
@@ -111,7 +111,7 @@ class DeckDisplay extends React.Component
             deck: props.deck,
             editing: 0,
             newCardValue: '',
-            showCards: false,
+            showCardsEditing: false,
         };
 
         this.handleChange = this.handleChange.bind(this);
@@ -180,7 +180,7 @@ class DeckDisplay extends React.Component
                      <br/>
                      Show Card Values: <input type="checkbox" name="showCardsLocked" checked={this.state.deck.showCardsLocked} onChange={this.updateSetting} />
                      {this.state.deck.showCardsLocked ? null :
-                      ["Show cards while editing: ", <input type="checkbox" name="showCards" checked={this.state.showCards} onChange={this.handleChange} />]
+                      ["Show cards while editing: ", <input type="checkbox" name="showCardsEditing" checked={this.state.deck.showCardsEditing} onChange={this.updateSetting} />]
                      }
                      <br/>
                  </div>
@@ -203,7 +203,8 @@ class DeckDisplay extends React.Component
                       <tbody>
                       {this.state.deck.cards.map((card, index) => <CardRow card={card} deckdisp={this} index={index}
                                                                            key={index.toString() + card._id.toString()}
-                                                                           app={this.state.app}/>)}
+                                                                           app={this.state.app}/>)
+                      }
                       </tbody>
                   </table>
                 }

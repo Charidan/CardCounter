@@ -45,7 +45,7 @@ class DeckRow extends Component
 
     putDrawnCardOnBottom()
     {
-        this.state.app.server.post("/deck/" + this.state.deck._id + "/putbottom/" + this.state.deck.drawnCard._id, {}).then((res) =>
+        this.state.app.server.post("/deck/" + this.state.deck._id + "/putbottom/drawn", {}).then((res) =>
         {
             this.setState({deck: res.data});
         });

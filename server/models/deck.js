@@ -1,15 +1,17 @@
 const mongoose = require('mongoose');
+const cardSchema = require('./card.js').cardSchema;
 
 const deckSchema = new mongoose.Schema({
     name: String,
     id: Number,
     game: { type: mongoose.Schema.Types.ObjectId, ref: 'Game' },
-    cards: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Card' }],
-    drawnCard: { type: mongoose.Schema.Types.ObjectId, ref: 'Card' },
+    cards: [cardSchema],
+    drawnCard: cardSchema,
 
     // deck settings
 
     showCardsLocked: Boolean,
+    showCardsEditing: Boolean,
 
     // legal actions
     legalDraw: Boolean,
@@ -33,8 +35,6 @@ deckSchema.methods.drawCard = function()
 deckSchema.methods.putOnBottom = function(card, faceup)
 {
     card.faceup = faceup ? faceup : false;
-    card.deck = this._id;
-    card.save();
     this.drawnCard = null;
     this.cards.push(card);
 };
