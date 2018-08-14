@@ -111,6 +111,7 @@ class GameDisplay extends React.Component
 
         this.handleChange = this.handleChange.bind(this);
         this.createDeck = this.createDeck.bind(this);
+        this.handleTemplateChange = this.handleTemplateChange.bind(this);
     }
 
     handleChange(event)
@@ -178,6 +179,12 @@ class GameDisplay extends React.Component
             <div className="mainsection">
                 <button onClick={this.state.app.closeGame}>Return to Main</button>
                 <h3>{this.state.game.name}</h3>
+                {this.state.app.state.locked ? null :
+                 <label>
+                     Is Template:
+                     <input type="checkbox" name='isTemplate' value={this.state.game.isTemplate} onChange={this.handleTemplateChange}/>
+                 </label>
+                }
                 <table className="bordered">
                     <thead>
                     <tr>
