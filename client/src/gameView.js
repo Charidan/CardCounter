@@ -124,6 +124,14 @@ class GameDisplay extends React.Component
         });
     }
 
+    handleTemplateChange(event)
+    {
+        this.state.app.server.post("/game/" + this.state.game._id + "/setTemplate", {isTemplate: event.checked}).then((res) =>
+        {
+            this.setState({game: res.data});
+        });
+    }
+
     createDeck(event)
     {
         let reqobj = {
