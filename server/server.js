@@ -391,6 +391,9 @@ Game.findById(gloomid, function(err, game) {
         {
             let shuffleAndSave = function(deck)
             {
+                deck.legalDraw = true;
+                deck.legalDestroy = true;
+                deck.legalPutOnBottom = true;
                 deck.shuffle();
                 deck.markModified('cards');
                 deck.save();
