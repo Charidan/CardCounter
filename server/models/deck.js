@@ -3,7 +3,7 @@ const cardSchema = require('./card.js').cardSchema;
 
 const deckSchema = new mongoose.Schema({
     name: String,
-    game: { type: mongoose.Schema.Types.ObjectId, ref: 'Game' },
+    gameid: mongoose.Schema.ObjectId,
     cards: [cardSchema],
     drawnCard: cardSchema,
 

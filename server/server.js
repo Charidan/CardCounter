@@ -77,12 +77,14 @@ router.post('/game/clone/', (req, res) => {
                 fail(err, res);
                 return;
             }
-            Deck.find({gameid: req.body.gameid}).exec(function(err, decks)
+
+            Deck.find({gameid: mongoose.Types.ObjectId(req.body.gameid)}).exec(function(err, decks)
             {
+                console.log(mongoose.Types.ObjectId(req.body.gameid));
                 for(let i = 0; i < decks.length; i++)
                 {
                     decks[i]._id = mongoose.Types.ObjectId();
-                    decks[i].game = prod._id;
+                    decks[i].gameid = prod._id;
                     decks[i].isNew = true;
 
                     for(let c = 0; c < decks[i].cards.length; c++)
@@ -143,7 +145,7 @@ let createDeck = function(callback, gameid, name, rangeMin, rangeMax)
         }
         let deck = new Deck({
             name: (name ? name : ('Deck' + (ret+1))),
-            game: gameid,
+            gameid: mongoose.Types.ObjectId(gameid),
 
             // deck settings
             showCardsLocked: false,
@@ -160,7 +162,7 @@ let createDeck = function(callback, gameid, name, rangeMin, rangeMax)
         {
             for(let i = rangeMin; i <= rangeMax; i++)
             {
-                let card = new Card({_id: mongoose.Types.ObjectId(), value: i, game: gameid});
+                let card = new Card({_id: mongoose.Types.ObjectId(), value: i});
                 deck.putOnBottom(card);
             }
         }
@@ -184,7 +186,7 @@ let createDeckAndSave = function(callback, gameid, name, rangeMin, rangeMax)
 };
 
 // GET list decks of specified gameid
-router.get('/decks/:gameid', (req,res) => { Deck.find({game: mongoose.Types.ObjectId(req.params.gameid)}).exec((err, ret) => (err ? fail(err) : res.json(ret))) });
+router.get('/decks/:gameid', (req,res) => { Deck.find({gameid: mongoose.Types.ObjectId(req.params.gameid)}).exec((err, ret) => (err ? fail(err) : res.json(ret))) });
 
 // GET deck by id
 router.get('/deck/:deckid', (req,res) => { Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, ret) => (err ? fail(err) : res.json(ret))) });
@@ -273,7 +275,7 @@ router.post('/deck/:deckid/createbottom/', (req, res) =>{
             return;
         }
 
-        let card = new Card({_id: mongoose.Types.ObjectId(), value: req.body.value, game: deck.game, deckid: req.params.deckid});
+        let card = new Card({_id: mongoose.Types.ObjectId(), value: req.body.value, deckid: req.params.deckid});
 
         deck.putOnBottom(card);
         deck.markModified('cards');
