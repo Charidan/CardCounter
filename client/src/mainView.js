@@ -17,9 +17,6 @@ class GameRow extends Component
         return (
             <tr>
                 <td>
-                    {this.state.game.id}
-                </td>
-                <td>
                     {this.state.game.name}
                 </td>
                 <td>
@@ -101,7 +98,6 @@ class AllGamesList extends React.Component
                 <table className="bordered">
                     <thead>
                     <tr>
-                        <th>id</th>
                         <th>Game Name</th>
                     </tr>
                     </thead>

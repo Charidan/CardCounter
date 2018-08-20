@@ -71,6 +71,18 @@ class App extends Component
         this.setState({activeGame: null, decklist: null});
     }
 
+    cloneGame(game)
+    {
+        this.server.post('/game/clone/', {gameid: game._id}).then((res) =>
+        {
+            console.log(res.data);
+            this.setState((oldState) => {
+                oldState.gamelist.push(res.data);
+                return { gamelist: oldState.gamelist };
+            });
+        });
+    }
+
     openDeck(deck, game)
     {
         this.server.get('/deck/' + deck._id).then((res) =>

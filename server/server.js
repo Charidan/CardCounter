@@ -50,11 +50,9 @@ router.route('/games')
       .post((req, res) => {
           Game.count().exec((err, ret) => {
               if(err) { fail(err, res); return; }
-              let id = ret + 1;
               let game = new Game();
-              game.name = (req.body.name ? req.body.name : ('Game'+id));
-              game.id = id;
-              game.save((err) => err ? fail(err, res) : res.json(game));
+              game.name = (req.body.name ? req.body.name : ('Game'+(ret+1)));
+              game.save((err, prod) => err ? fail(err, res) : res.json(prod));
           })
       });
 
@@ -69,9 +67,36 @@ router.post('/game/clone/', (req, res) => {
             return;
         }
 
-        let clone = prepObjToDeepCopy(game);
+        game._id = mongoose.Types.ObjectId();
+        game.isNew = true;
         game.isTemplate = false;
-        clone.save((err) => err ? fail(err, res) : res.json(clone));
+
+        game.save(function(err, prod) {
+            if(err)
+            {
+                fail(err, res);
+                return;
+            }
+            Deck.find({gameid: req.body.gameid}).exec(function(err, decks)
+            {
+                for(let i = 0; i < decks.length; i++)
+                {
+                    decks[i]._id = mongoose.Types.ObjectId();
+                    decks[i].game = prod._id;
+                    decks[i].isNew = true;
+
+                    for(let c = 0; c < decks[i].cards.length; c++)
+                    {
+                        // TODO is this needed?
+                        decks[i].cards[c]._id = mongoose.Types.ObjectId();
+                    }
+
+                    decks[i].save((err) => err ? fail(err, res) : null);
+                }
+
+                res.json(prod);
+            });
+        });
     });
 });
 
@@ -86,12 +111,9 @@ router.post('/game/:gameid/setTemplate', (req, res) => {
             return;
         }
 
-        console.log("setting template status to " + req.params.isTemplate);
-        console.log(game);
-
         game.isTemplate = req.body.isTemplate;
 
-        game.save((err) => err ? fail(err, res) : res.json(game));
+        game.save((err, prod) => err ? fail(err, res) : res.json(prod));
     });
 });
 
@@ -100,34 +122,66 @@ router.post('/game/:gameid/setTemplate', (req, res) => {
 router.route('/decks')
       .get((req, res) => { Deck.find().exec((err,ret) => (err ? fail(err) : res.json(ret))) })
       .post((req, res) => {
-          let game = Game.findOne({_id: mongoose.Types.ObjectId(req.body.gameid)});
-          if(game == null) {
-              fail("ERROR: attempt to create deck for non-existant gameid", res);
-              return;
-          }
-
-          Deck.count().exec((err, ret) => {
-              if(err) { fail(err, res); return; }
-              let id = ret + 1;
-              let deck = new Deck();
-              deck.name = (req.body.name ? req.body.name : ('Deck'+id));
-              deck.id = id;
-              deck.game = req.body.gameid;
-
-              if(req.body.rangeMin != null && req.body.rangeMax != null)
-              {
-                  for(let i = req.body.rangeMin; i <= req.body.rangeMax; i++)
-                  {
-                      let card = new Card({_id: mongoose.Types.ObjectId(), value: i, game: req.body.gameid, deckid: id});
-                      console.log(card._id);
-                      deck.putOnBottom(card);
-                  }
-              }
-
-              deck.markModified('cards');
-              return deck.save((err) => err ? fail(err, res) : res.json(deck));
-          });
+          createDeckAndSave((err, prod) => err ? fail(err, res) : res.json(prod));
       });
+
+let createDeck = function(callback, gameid, name, rangeMin, rangeMax)
+{
+    let game = Game.findOne({_id: mongoose.Types.ObjectId(gameid)});
+    if(game == null)
+    {
+        fail("ERROR: attempt to create deck for non-existant gameid", res);
+        return;
+    }
+
+    Deck.count().exec((err, ret) =>
+    {
+        if(err)
+        {
+            callback("err");
+            return;
+        }
+        let deck = new Deck({
+            name: (name ? name : ('Deck' + (ret+1))),
+            game: gameid,
+
+            // deck settings
+            showCardsLocked: false,
+            showCardsEditing: false,
+
+            // legal actions
+            legalDraw: false,
+            legalShuffle: false,
+            legalDestroy: false,
+            legalPutOnBottom: false,
+        });
+
+        if(rangeMin != null && rangeMax != null)
+        {
+            for(let i = rangeMin; i <= rangeMax; i++)
+            {
+                let card = new Card({_id: mongoose.Types.ObjectId(), value: i, game: gameid});
+                deck.putOnBottom(card);
+            }
+        }
+
+        if(callback != null) callback(deck);
+    });
+};
+
+let createDeckAndSave = function(callback, gameid, name, rangeMin, rangeMax)
+{
+    createDeck(function(ret)
+    {
+        if(ret === "err")
+        {
+            fail(err, res);
+            return;
+        }
+        ret.markModified('cards');
+        return ret.save(function(err, prod) { if(callback != null) callback(err, prod); });
+    }, gameid, name, rangeMin, rangeMax);
+};
 
 // GET list decks of specified gameid
 router.get('/decks/:gameid', (req,res) => { Deck.find({game: mongoose.Types.ObjectId(req.params.gameid)}).exec((err, ret) => (err ? fail(err) : res.json(ret))) });
@@ -154,7 +208,7 @@ router.post('/deck/:deckid/shuffle', (req, res) => {
 
         deck.shuffle();
         deck.markModified('cards');
-        deck.save((err) => err ? fail(err, res) : res.json(deck));
+        deck.save((err, prod) => err ? fail(err, res) : res.json(prod));
     });
 });
 
@@ -176,7 +230,7 @@ router.post('/deck/:deckid/draw', (req, res) => {
 
         let card = deck.drawCard();
         deck.markModified('cards');
-        deck.save((err) => err ? fail(err, res) : res.json([card, deck]));
+        deck.save((err, prod) => err ? fail(err, res) : res.json([card, prod]));
     });
 });
 
@@ -199,7 +253,7 @@ router.post('/deck/:deckid/putbottom/drawn', (req, res) => {
         deck.putOnBottom(deck.drawnCard);
         deck.drawnCard = null;
         deck.markModified('cards');
-        deck.save((err) => err ? fail(err, res) : res.json(deck));
+        deck.save((err, prod) => err ? fail(err, res) : res.json(prod));
     });
 });
 
@@ -223,7 +277,7 @@ router.post('/deck/:deckid/createbottom/', (req, res) =>{
 
         deck.putOnBottom(card);
         deck.markModified('cards');
-        deck.save((err) => err ? fail(err, res) : res.json(deck));
+        deck.save((err, prod) => err ? fail(err, res) : res.json(prod));
     });
 });
 
@@ -240,7 +294,7 @@ router.post('/deck/:deckid/move/', (req, res) =>
         deck.cards[targetIndex] = swap;
 
         deck.markModified('cards');
-        deck.save((err) => err ? fail(err, res) : res.json(deck));
+        deck.save((err, prod) => err ? fail(err, res) : res.json(prod));
     });
 });
 
@@ -255,7 +309,7 @@ router.post('/deck/:deckid/deleteCard', (req, res) =>
             {
                 let card = deck.cards.splice(i, 1);
                 deck.markModified('cards');
-                deck.save((err) => err ? fail(err, res) : res.json(deck));
+                deck.save((err, prod) => err ? fail(err, res) : res.json(prod));
                 return;
             }
         }
@@ -271,7 +325,7 @@ router.post('/deck/:deckid/destroyDrawnCard', (req, res) =>
     {
         deck.drawnCard = null;
         deck.markModified('drawnCard');
-        deck.save((err) => err ? fail(err, res) : res.json(deck));
+        deck.save((err, prod) => err ? fail(err, res) : res.json(prod));
     });
 });
 
@@ -294,7 +348,7 @@ router.post('/deck/:deckid/updateSetting/', (req, res) =>{
         // the save() will auto-validate our fields if they fail to match the schema
         Object.assign(deck, req.body);
 
-        deck.save((err) => err ? fail(err, res) : res.json(deck));
+        deck.save((err, prod) => err ? fail(err, res) : res.json(prod));
     });
 });
 
@@ -319,11 +373,51 @@ router.route('/deck/card/:index')
 
             deck.cards[req.params.index].value = req.body.card.value;
             deck.cards[req.params.index].faceup = req.body.card.faceup;
-            deck.save((err) => err ? fail(err, res) : res.json(deck));
+            deck.save((err, prod) => err ? fail(err, res) : res.json(prod));
         });
     });
 
 /////////////////////////////////////////////////////////
+
+// initialize Gloomhaven template in new DB
+let gloomid = mongoose.Types.ObjectId('4edd40c86762e0fb12000003');
+Game.findById(gloomid, function(err, game) {
+    if(game == null)
+    {
+        let gloom = new Game({_id: gloomid, name: "Gloomhaven", isTemplate: true});
+        gloom.save(function(err, game)
+        {
+            let shuffleAndSave = function(deck)
+            {
+                deck.shuffle();
+                deck.markModified('cards');
+                deck.save();
+            };
+            createDeck(shuffleAndSave, game._id, "City", 1, 30);
+            createDeck(shuffleAndSave, game._id, "Road", 1, 30);
+            createDeck(function(deck)
+            {
+                for(let i = 1; i <= 14; i++)
+                {
+                    let card = new Card({value: i, _id: mongoose.Types.ObjectId()});
+                    if(i >= 12)
+                    {
+                        deck.putOnBottom(card);
+                        card = new Card({value: i, _id: mongoose.Types.ObjectId()});
+                        deck.putOnBottom(card);
+                        card = new Card({value: i, _id: mongoose.Types.ObjectId()});
+                    }
+                    deck.putOnBottom(card);
+                    card = new Card({value: i, _id: mongoose.Types.ObjectId()});
+                    deck.putOnBottom(card);
+
+                    deck.markModified('cards');
+                    deck.save();
+                }
+            }, game._id, "Store");
+        });
+    }
+});
 
 server.use('/cardcounter', router);
 const port = process.env.PORT || 2837;

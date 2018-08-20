@@ -107,6 +107,7 @@ class DeckDisplay extends React.Component
     {
         super(props);
         this.state = {
+            key: props.key,
             app: props.app,
             deck: props.deck,
             editing: 0,
@@ -180,7 +181,7 @@ class DeckDisplay extends React.Component
                      <br/>
                      Show Card Values: <input type="checkbox" name="showCardsLocked" checked={this.state.deck.showCardsLocked} onChange={this.updateSetting} />
                      {this.state.deck.showCardsLocked ? null :
-                      ["Show cards while editing: ", <input type="checkbox" name="showCardsEditing" checked={this.state.deck.showCardsEditing} onChange={this.updateSetting} />]
+                      ["Show cards while editing: ", <input key={this.state.key+"showCardsEditing"} type="checkbox" name="showCardsEditing" checked={this.state.deck.showCardsEditing} onChange={this.updateSetting} />]
                      }
                      <br/>
                  </div>

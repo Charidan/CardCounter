@@ -3,13 +3,11 @@ const cardSchema = require('./card.js').cardSchema;
 
 const deckSchema = new mongoose.Schema({
     name: String,
-    id: Number,
     game: { type: mongoose.Schema.Types.ObjectId, ref: 'Game' },
     cards: [cardSchema],
     drawnCard: cardSchema,
 
     // deck settings
-
     showCardsLocked: Boolean,
     showCardsEditing: Boolean,
 

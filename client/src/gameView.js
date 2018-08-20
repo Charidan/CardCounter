@@ -56,9 +56,6 @@ class DeckRow extends Component
         return (
             <tr>
                 <td>
-                    {this.state.deck.id}
-                </td>
-                <td>
                     {this.state.deck.name}
                 </td>
                 <td>
@@ -188,7 +185,6 @@ class GameDisplay extends React.Component
                 <table className="bordered">
                     <thead>
                     <tr>
-                        <th>id</th>
                         <th>Deck Name</th>
                         <th>Cards</th>
                         <th colSpan="2"> </th>{/* shuffle/draw | drawn card */}
