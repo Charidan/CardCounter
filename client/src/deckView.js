@@ -101,6 +101,66 @@ class CardRow extends Component
     }
 }
 
+class DeckTargetChooser extends React.Component
+{
+    constructor(props)
+    {
+        super(props);
+        this.state = {
+            app: props.app,
+            prohibDecks: [],
+            targetDecks: [],
+        };
+
+        this.handleChange = this.handleChange.bind(this);
+        this.populateDecks = this.populateDecks.bind(this);
+
+        this.populateDecks();
+    }
+
+    populateDecks()
+    {
+        let tempDecks = [];
+        for(let i = 0; i < props.app.decklist.length; i++)
+        {
+            tempDecks.push(props.app.decklist[i]._id);
+        }
+
+        tempDecks = tempDecks.filter(function( el ) {
+            return !this.state.targetDecks.includes( el );
+        });
+
+        this.setState({ prohibDecks: tempDecks });
+    }
+
+    render()
+    {
+        //TODO configure buttons to transfer items between selection lists
+        //TODO configure selection lists to be backed by the interesting arrays
+        //TODO configure transfer to update settings in the database
+        return (
+            <table>
+                <tr>
+                    <td>Prohibited:</td>
+                    <td>Targetable:</td>
+                </tr>
+                <tr>
+                    <td><select multiple id="prohibDeckSelect">
+
+                    </select></td>
+
+                    <button></button>
+                    <button></button>
+
+                    <td><select multiple id="prohibDeckSelect">
+
+                    </select></td>
+                </tr>
+            </table>
+        )
+    }
+}
+
 class DeckDisplay extends React.Component
 {
     constructor(props)
@@ -183,6 +243,12 @@ class DeckDisplay extends React.Component
                      {this.state.deck.showCardsLocked ? null :
                       ["Show cards while editing: ", <input key={this.state.key+"showCardsEditing"} type="checkbox" name="showCardsEditing" checked={this.state.deck.showCardsEditing} onChange={this.updateSetting} />]
                      }
+                     <br/>
+                     Can receive cards from other decks: <input type="checkbox" name="legalAcceptTransfer" checked={this.state.deck.legalAcceptTransfer} onChange={this.updateSetting} />
+                     <br/>
+                     Can discard drawn card to other decks: <input type="checkbox" name="legalPerformTransferDrawn" checked={this.state.deck.legalPerformTransferDrawn} onChange={this.updateSetting} />
+                     <br/>
+                     Can transfer any card to other decks: <input type="checkbox" name="legalPerformTransferAny" checked={this.state.deck.legalPerformTransferAny} onChange={this.updateSetting} />
                      <br/>
                  </div>
                  }
