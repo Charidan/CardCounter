@@ -106,10 +106,23 @@ class DeckTargetChooser extends React.Component
     constructor(props)
     {
         super(props);
+
+        let initDecks = [];
+        for(let i = 0; i < props.targets.length; i++)
+        {
+            for(let j = 0; j < props.app.decklist.length; j++)
+            {
+                if(props.app.decklist[j]._id === props.targets[i]._id)
+                {
+                    initDecks.push(props.app.decklist[j]);
+                }
+            }
+        }
+
         this.state = {
             app: props.app,
             prohibDecks: [],
-            targetDecks: [],
+            targetDecks: initDecks,
         };
 
         this.handleChange = this.handleChange.bind(this);
@@ -118,19 +131,88 @@ class DeckTargetChooser extends React.Component
         this.populateDecks();
     }
 
+    nameComparator(a,b)
+    {
+        if (a.name < b.name)
+            return -1;
+        if (a.name > b.name)
+            return 1;
+        return 0;
+    };
+
     populateDecks()
     {
         let tempDecks = [];
         for(let i = 0; i < props.app.decklist.length; i++)
         {
-            tempDecks.push(props.app.decklist[i]._id);
+            tempDecks.push(props.app.decklist[i]);
         }
 
         tempDecks = tempDecks.filter(function( el ) {
             return !this.state.targetDecks.includes( el );
         });
 
-        this.setState({ prohibDecks: tempDecks });
+        this.setState(prevState => {return { prohibDecks: tempDecks.sort(this.nameComparator), targetDecks: prevState.targetDecks.sort(this.nameComparator) };});
+    }
+
+    addTargets()
+    {
+        let newTargetDecks = this.state.targetDecks.clone();
+        let newProhibDecks = this.state.prohibDecks.clone();
+        for(let i = 0; i < this.refs.prohibDeckSelect.options.length; i++)
+        {
+            if(this.refs.prohibDeckSelect.options[i].selected)
+            {
+                // add to targets
+                newTargetDecks.push();
+                // remove from prohib
+                for(let j = 0; j < newProhibDecks.length; j++)
+                {
+                    if(newProhibDecks[j]._id === this.refs.prohibDeckSelect.options[i]._id)
+                    {
+                        newProhibDecks = newProhibDecks.splice(j, 1);
+                        j--;
+                    }
+                }
+            }
+        }
+
+        // TODO update server with new targets
+
+        this.setState({
+            targetDecks: newTargetDecks.sort(this.nameComparator),
+            prohibDecks: newProhibDecks.sort(this.nameComparator)
+        });
+    }
+
+    removeTargets()
+    {
+        let newTargetDecks = this.state.targetDecks.clone();
+        let newProhibDecks = this.state.prohibDecks.clone();
+        for(let i = 0; i < this.refs.targetDeckSelect.options.length; i++)
+        {
+            if(this.refs.targetDeckSelect.options[i].selected)
+            {
+                // add to prohib
+                newProhibDecks.push();
+                // remove from target
+                for(let j = 0; j < newTargetDecks.length; j++)
+                {
+                    if(newTargetDecks[j]._id === this.refs.targetDeckSelect.options[i]._id)
+                    {
+                        newTargetDecks = newTargetDecks.splice(j, 1);
+                        j--;
+                    }
+                }
+            }
+        }
+
+        // TODO update server with removed targets
+
+        this.setState({
+            targetDecks: newTargetDecks.sort(this.nameComparator),
+            prohibDecks: newProhibDecks.sort(this.nameComparator)
+        });
     }
 
     render()
@@ -146,14 +228,14 @@ class DeckTargetChooser extends React.Component
                 </tr>
                 <tr>
                     <td><select multiple id="prohibDeckSelect">
-
+                        {this.state.deck.prohibDecks.map((deck) => <option value={deck}>deck.name</option>)}
                     </select></td>
 
-                    <button></button>
-                    <button></button>
+                    <button onClick={this.removeTargets}>{'<<'}</button>
+                    <button onClick={this.addTargets}>{'>>'}</button>
 
-                    <td><select multiple id="prohibDeckSelect">
-
+                    <td><select multiple id="targetDeckSelect">
+                        {this.state.deck.targetDecks.map((deck) => <option value={deck}>deck.name</option>)}
                     </select></td>
                 </tr>
             </table>
