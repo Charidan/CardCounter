@@ -124,7 +124,7 @@ router.post('/game/:gameid/setTemplate', (req, res) => {
 router.route('/decks')
       .get((req, res) => { Deck.find().exec((err,ret) => (err ? fail(err) : res.json(ret))) })
       .post((req, res) => {
-          createDeckAndSave((err, prod) => err ? fail(err, res) : res.json(prod));
+          createDeckAndSave((err, prod) => err ? fail(err, res) : res.json(prod), req.body.gameid, req.body.name, req.body.rangeMin, req.body.rangeMax);
       });
 
 let createDeck = function(callback, gameid, name, rangeMin, rangeMax)
@@ -309,7 +309,7 @@ router.post('/deck/:deckid/deleteCard', (req, res) =>
         {
             if(deck.cards[i]._id.equals(mongoose.Types.ObjectId(req.body.cardid)))
             {
-                let card = deck.cards.splice(i, 1);
+                deck.cards.splice(i, 1);
                 deck.markModified('cards');
                 deck.save((err, prod) => err ? fail(err, res) : res.json(prod));
                 return;
