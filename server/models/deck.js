@@ -10,13 +10,17 @@ const deckSchema = new mongoose.Schema({
     // deck settings
     showCardsLocked: Boolean,
     showCardsEditing: Boolean,
+    drawTransferTargets: [mongoose.Schema.ObjectId],
+    anyTransferTargets: [mongoose.Schema.ObjectId],
 
     // legal actions
     legalDraw: Boolean,
     legalShuffle: Boolean,
     legalDestroy: Boolean,
     legalPutOnBottom: Boolean,
-
+    legalAcceptTransfer: Boolean,
+    legalPerformTransferDrawn: Boolean,
+    legalPerformTransferAny: Boolean,
 
 
 }, {
