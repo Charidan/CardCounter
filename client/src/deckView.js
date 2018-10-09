@@ -107,28 +107,42 @@ class DeckTargetChooser extends React.Component
     {
         super(props);
 
-        let initDecks = [];
-        for(let i = 0; i < props.targets.length; i++)
+        let initProhib = [];
+        for(let i = 0; i < props.app.state.decklist.length; i++)
         {
-            for(let j = 0; j < props.app.decklist.length; j++)
+            if(props.app.state.decklist[i].legalAcceptTransfer)
             {
-                if(props.app.decklist[j]._id === props.targets[i]._id)
+                let duplicate = false;
+
+                for(let j = 0; j < props.initTargets.length; j++)
                 {
-                    initDecks.push(props.app.decklist[j]);
+                    if(props.app.state.decklist[i]._id !== props.initTargets[j].deckid)
+                    {
+                        duplicate = true;
+                        break;
+                    }
+                }
+
+                if(!duplicate)
+                {
+                    initProhib.push({deckid: props.app.state.decklist[i]._id, name: props.app.state.decklist[i].name});
                 }
             }
         }
 
+        initProhib.sort(this.nameComparator);
+        props.initTargets.sort(this.nameComparator);
+
         this.state = {
             app: props.app,
-            prohibDecks: [],
-            targetDecks: initDecks,
+            callback: props.callback,
+            prohibDecks: initProhib,
+            targetDecks: props.initTargets,
         };
 
-        this.handleChange = this.handleChange.bind(this);
-        this.populateDecks = this.populateDecks.bind(this);
-
-        this.populateDecks();
+        this.addTargets = this.addTargets.bind(this);
+        this.removeTargets = this.removeTargets.bind(this);
+        this.repopulateLists = this.repopulateLists.bind(this);
     }
 
     nameComparator(a,b)
@@ -140,35 +154,61 @@ class DeckTargetChooser extends React.Component
         return 0;
     };
 
-    populateDecks()
+    repopulateLists()
     {
-        let tempDecks = [];
-        for(let i = 0; i < props.app.decklist.length; i++)
+        this.setState((prevState) =>
         {
-            tempDecks.push(props.app.decklist[i]);
-        }
 
-        tempDecks = tempDecks.filter(function( el ) {
-            return !this.state.targetDecks.includes( el );
+            let initProhib = [];
+            let newTargetDecks = prevState.targetDecks;
+            for(let i = 0; i < prevState.app.state.decklist.length; i++)
+            {
+                if(prevState.app.state.decklist[i].legalAcceptTransfer)
+                {
+                    let duplicate = false;
+
+                    for(let j = 0; j < newTargetDecks.length; j++)
+                    {
+                        if(prevState.app.state.decklist[i]._id !== newTargetDecks[j].deckid)
+                        {
+                            duplicate = true;
+                            break;
+                        }
+                    }
+
+                    if(!duplicate)
+                    {
+                        initProhib.push({
+                            deckid: prevState.app.state.decklist[i]._id,
+                            name: prevState.app.state.decklist[i].name
+                        });
+                    }
+                }
+            }
+
+            initProhib.sort(this.nameComparator);
+            newTargetDecks.sort(this.nameComparator);
+
+            return { prohibDecks: initProhib, targetDecks: newTargetDecks };
         });
-
-        this.setState(prevState => {return { prohibDecks: tempDecks.sort(this.nameComparator), targetDecks: prevState.targetDecks.sort(this.nameComparator) };});
     }
 
     addTargets()
     {
-        let newTargetDecks = this.state.targetDecks.clone();
-        let newProhibDecks = this.state.prohibDecks.clone();
+        let newTargetDecks = this.state.targetDecks;
+        let newProhibDecks = this.state.prohibDecks;
         for(let i = 0; i < this.refs.prohibDeckSelect.options.length; i++)
         {
             if(this.refs.prohibDeckSelect.options[i].selected)
             {
                 // add to targets
-                newTargetDecks.push();
+                newTargetDecks.push(this.refs.prohibDeckSelect.options[i].value);
+                // TODO why is the above value null
+                // TODO duplicate fix in removeTargets
                 // remove from prohib
                 for(let j = 0; j < newProhibDecks.length; j++)
                 {
-                    if(newProhibDecks[j]._id === this.refs.prohibDeckSelect.options[i]._id)
+                    if(newProhibDecks[j].deckid === this.refs.prohibDeckSelect.options[i].deckid)
                     {
                         newProhibDecks = newProhibDecks.splice(j, 1);
                         j--;
@@ -177,28 +217,33 @@ class DeckTargetChooser extends React.Component
             }
         }
 
-        // TODO update server with new targets
+        newTargetDecks.sort(this.nameComparator);
+        newProhibDecks.sort(this.nameComparator);
 
-        this.setState({
-            targetDecks: newTargetDecks.sort(this.nameComparator),
-            prohibDecks: newProhibDecks.sort(this.nameComparator)
-        });
+        console.log("newTargetDecks");
+        console.log(newTargetDecks);
+        console.log(newTargetDecks[0]);
+        console.log(Object.keys(newTargetDecks[0]));
+
+        this.state.callback(newTargetDecks, this.repopulateLists);
+
+        this.setState({ targetDecks: newTargetDecks, prohibDecks: newProhibDecks });
     }
 
     removeTargets()
     {
-        let newTargetDecks = this.state.targetDecks.clone();
-        let newProhibDecks = this.state.prohibDecks.clone();
+        let newTargetDecks = this.state.targetDecks;
+        let newProhibDecks = this.state.prohibDecks;
         for(let i = 0; i < this.refs.targetDeckSelect.options.length; i++)
         {
             if(this.refs.targetDeckSelect.options[i].selected)
             {
                 // add to prohib
-                newProhibDecks.push();
+                newProhibDecks.push(this.refs.targetDeckSelect.options[i].value);
                 // remove from target
                 for(let j = 0; j < newTargetDecks.length; j++)
                 {
-                    if(newTargetDecks[j]._id === this.refs.targetDeckSelect.options[i]._id)
+                    if(newTargetDecks[j].deckid === this.refs.targetDeckSelect.options[i].deckid)
                     {
                         newTargetDecks = newTargetDecks.splice(j, 1);
                         j--;
@@ -207,12 +252,12 @@ class DeckTargetChooser extends React.Component
             }
         }
 
-        // TODO update server with removed targets
+        newTargetDecks.sort(this.nameComparator);
+        newProhibDecks.sort(this.nameComparator);
 
-        this.setState({
-            targetDecks: newTargetDecks.sort(this.nameComparator),
-            prohibDecks: newProhibDecks.sort(this.nameComparator)
-        });
+        this.state.callback(newTargetDecks);
+
+        this.setState({ targetDecks: newTargetDecks, prohibDecks: newProhibDecks });
     }
 
     render()
@@ -220,24 +265,31 @@ class DeckTargetChooser extends React.Component
         //TODO configure buttons to transfer items between selection lists
         //TODO configure selection lists to be backed by the interesting arrays
         //TODO configure transfer to update settings in the database
+        // all done? time for testing
         return (
             <table>
-                <tr>
-                    <td>Prohibited:</td>
-                    <td>Targetable:</td>
-                </tr>
-                <tr>
-                    <td><select multiple id="prohibDeckSelect">
-                        {this.state.deck.prohibDecks.map((deck) => <option value={deck}>deck.name</option>)}
-                    </select></td>
+                <tbody>
+                    <tr>
+                        <td>Prohibited:</td>
+                        <td colSpan="2"> </td>
+                        <td>Targetable:</td>
+                    </tr>
+                    <tr>
+                        <td><select multiple id="prohibDeckSelect" ref="prohibDeckSelect">
+                            {this.state.prohibDecks.map((deckref, index) => <option value={deckref} key={""+index+"prohib"+deckref.deckid}>{deckref.name}</option>)}
+                        </select></td>
 
-                    <button onClick={this.removeTargets}>{'<<'}</button>
-                    <button onClick={this.addTargets}>{'>>'}</button>
+                        <td>
+                            <button onClick={this.removeTargets}>{'<<'}</button>
+                            <br/>
+                            <button onClick={this.addTargets}>{'>>'}</button>
+                        </td>
 
-                    <td><select multiple id="targetDeckSelect">
-                        {this.state.deck.targetDecks.map((deck) => <option value={deck}>deck.name</option>)}
-                    </select></td>
-                </tr>
+                        <td><select multiple id="targetDeckSelect" ref="targetDeckSelect">
+                            {this.state.targetDecks.map((deckref, index) => <option value={deckref} key={""+index+"target"+deckref.deckid}>{deckref.name}</option>)}
+                        </select></td>
+                    </tr>
+                </tbody>
             </table>
         )
     }
@@ -261,6 +313,7 @@ class DeckDisplay extends React.Component
         this.updateSetting = this.updateSetting.bind(this);
         this.createCard = this.createCard.bind(this);
         this.moveCard = this.moveCard.bind(this);
+        this.setTargets = this.setTargets.bind(this);
     }
 
     handleChange(event)
@@ -300,6 +353,27 @@ class DeckDisplay extends React.Component
         });
     }
 
+    setTargets(drawnOrAny, targetDecks, callback)
+    {
+        console.log("drawnOrAny");
+        console.log(drawnOrAny);
+        console.log("targetDecks");
+        console.log(targetDecks);
+        console.log(targetDecks[0].name);
+        console.log(targetDecks[0].deckid);
+
+        let idList = [];
+        for(let i = 0; i < targetDecks.length; i++)
+        {
+            idList.push(targetDecks[i].deckid);
+        }
+
+        this.state.app.server.post('/deck/' + this.state.deck._id + '/setTargets', {drawnOrAny: drawnOrAny, targetDecks: idList}).then((res) =>
+        {
+            this.setState({deck: res.data});
+        });
+    }
+
     render()
     {
         return (
@@ -330,8 +404,22 @@ class DeckDisplay extends React.Component
                      <br/>
                      Can discard drawn card to other decks: <input type="checkbox" name="legalPerformTransferDrawn" checked={this.state.deck.legalPerformTransferDrawn} onChange={this.updateSetting} />
                      <br/>
+                     {
+                         this.state.deck.legalPerformTransferDrawn ?
+                              <DeckTargetChooser id="drawnTargetChooser" app={this.state.app} callback={this.setTargets.bind(this, true)} initTargets={this.state.deck.drawTransferTargets}/>
+                              :
+                              null
+                     }
+                     { this.state.deck.legalPerformTransferDrawn ? <br/> : null }
                      Can transfer any card to other decks: <input type="checkbox" name="legalPerformTransferAny" checked={this.state.deck.legalPerformTransferAny} onChange={this.updateSetting} />
                      <br/>
+                     {
+                         this.state.deck.legalPerformTransferAny ?
+                            <DeckTargetChooser id="anyTargetChooser" app={this.state.app} callback={this.setTargets.bind(this, false)} initTargets={this.state.deck.anyTransferTargets}/>
+                            :
+                            null
+                     }
+                     { this.state.deck.legalPerformTransferAny ? <br/> : null }
                  </div>
                  }
                  <br/>

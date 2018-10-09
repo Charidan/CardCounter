@@ -150,20 +150,30 @@ let createDeck = function(callback, gameid, name, rangeMin, rangeMax)
             // deck settings
             showCardsLocked: false,
             showCardsEditing: false,
+            drawTransferTargets: [],
+            anyTransferTargets: [],
 
             // legal actions
             legalDraw: false,
             legalShuffle: false,
             legalDestroy: false,
             legalPutOnBottom: false,
+            legalAcceptTransfer: false,
+            legalPerformTransferDrawn: false,
+            legalPerformTransferAny: false,
         });
 
         if(rangeMin != null && rangeMax != null)
         {
-            for(let i = rangeMin; i <= rangeMax; i++)
+            rangeMin = parseInt(rangeMin);
+            rangeMax = parseInt(rangeMax);
+            if(!( isNaN(rangeMin) && isNaN(rangeMax) ))
             {
-                let card = new Card({_id: mongoose.Types.ObjectId(), value: i});
-                deck.putOnBottom(card);
+                for(let i = rangeMin; i <= rangeMax; i++)
+                {
+                    let card = new Card({_id: mongoose.Types.ObjectId(), value: i});
+                    deck.putOnBottom(card);
+                }
             }
         }
 
@@ -379,6 +389,37 @@ router.route('/deck/card/:index')
         });
     });
 
+// POST set list of targets for deck transfer
+router.post('/deck/:deckid/setTargets/', (req, res) => {
+    Deck.findOne({_id: mongoose.Types.ObjectId(req.params.deckid)}).exec((err, deck) =>
+    {
+        if(err)
+        {
+            fail(err, res);
+            return;
+        }
+
+        if(deck == null)
+        {
+            fail("ERROR: attempt to set transfer targets of a non-existant deck", res);
+            return;
+        }
+
+        if(req.body.drawnOrAny)
+        {
+            deck.drawTransferTargets = req.body.targetDecks;
+            deck.markModified('drawTransferTargets');
+        }
+        else
+        {
+            deck.anyTransferTargets = req.body.targetDecks;
+            deck.markModified('anyTransferTargets');
+        }
+
+        deck.save((err, prod) => err ? fail(err, res) : res.json(prod));
+    });
+});
+
 /////////////////////////////////////////////////////////
 
 // initialize Gloomhaven template in new DB
@@ -415,6 +456,9 @@ Game.findById(gloomid, function(err, game) {
                     deck.putOnBottom(card);
                     card = new Card({value: i, _id: mongoose.Types.ObjectId()});
                     deck.putOnBottom(card);
+
+                    // TODO add transfer to the player decks and vice versa
+                    // maybe need to do that after because it's bidirectional
 
                     deck.markModified('cards');
                     deck.save();
