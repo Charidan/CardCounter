@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const cardSchema = require('./card.js').cardSchema;
+const deckRefSchema = require('./deckreference.js').deckRefSchema;
 
 const deckSchema = new mongoose.Schema({
     name: String,
@@ -10,8 +11,8 @@ const deckSchema = new mongoose.Schema({
     // deck settings
     showCardsLocked: Boolean,
     showCardsEditing: Boolean,
-    drawTransferTargets: [mongoose.Schema.ObjectId],
-    anyTransferTargets: [mongoose.Schema.ObjectId],
+    drawTransferTargets: [deckRefSchema],
+    anyTransferTargets: [deckRefSchema],
 
     // legal actions
     legalDraw: Boolean,

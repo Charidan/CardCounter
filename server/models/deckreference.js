@@ -5,7 +5,8 @@ const deckRefSchema = new mongoose.Schema({
     deckid: mongoose.Schema.ObjectId,
 
 }, {
-    usePushEach: true
+    usePushEach: true,
+    _id : false
 });
 
 const DeckRef = mongoose.model('DeckRef', deckRefSchema);

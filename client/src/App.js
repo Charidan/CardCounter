@@ -11,7 +11,6 @@ class App extends Component
     {
         super();
         this.state = {
-            // TODO gamelist should be in mainView.js and deckList should be in gameView.js
             gamelist : [],
             decklist : [],
             activeGame : null,

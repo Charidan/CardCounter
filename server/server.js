@@ -435,34 +435,67 @@ Game.findById(gloomid, function(err, game) {
                 deck.legalDraw = true;
                 deck.legalDestroy = true;
                 deck.legalPutOnBottom = true;
+
                 deck.shuffle();
                 deck.markModified('cards');
                 deck.save();
             };
             createDeck(shuffleAndSave, game._id, "City", 1, 30);
             createDeck(shuffleAndSave, game._id, "Road", 1, 30);
-            createDeck(function(deck)
+            createDeck(function(shop)
             {
+                shop._id = mongoose.Types.ObjectId();
+
                 for(let i = 1; i <= 14; i++)
                 {
                     let card = new Card({value: i, _id: mongoose.Types.ObjectId()});
                     if(i >= 12)
                     {
-                        deck.putOnBottom(card);
+                        shop.putOnBottom(card);
                         card = new Card({value: i, _id: mongoose.Types.ObjectId()});
-                        deck.putOnBottom(card);
+                        shop.putOnBottom(card);
                         card = new Card({value: i, _id: mongoose.Types.ObjectId()});
                     }
-                    deck.putOnBottom(card);
+                    shop.putOnBottom(card);
                     card = new Card({value: i, _id: mongoose.Types.ObjectId()});
-                    deck.putOnBottom(card);
-
-                    // TODO add transfer to the player decks and vice versa
-                    // maybe need to do that after because it's bidirectional
-
-                    deck.markModified('cards');
-                    deck.save();
+                    shop.putOnBottom(card);
                 }
+
+                shop.showCardsLocked = true;
+                shop.legalAcceptTransfer = true;
+                shop.legalPerformTransferAny = true;
+
+                let playerRefs = [];
+                for(let i = 1; i < 5; i++)
+                {
+                    playerRefs.push( { name: "Player " + i, deckid: mongoose.Types.ObjectId() } );
+                }
+
+                shop.anyTransferTargets = playerRefs;
+
+                shop.markModified('cards');
+                shop.markModified('anyTransferTargets');
+                shop.save();
+
+                // Create player inventories and link transfer to the shop bidirectionally
+                let playerCallback = function(deckid, player)
+                {
+                    player._id = deckid;
+
+                    player.showCardsLocked = true;
+                    player.legalAcceptTransfer = true;
+                    player.legalPerformTransferAny = true;
+                    player.anyTransferTargets = [{name: shop.name, deckid: shop._id}];
+
+                    player.markModified('anyTransferTargets');
+                    player.save();
+                };
+
+                for(let i = 0; i < 4; i++)
+                {
+                    createDeck(playerCallback.bind(null, playerRefs[i].deckid), game._id, playerRefs[i].name);
+                }
+
             }, game._id, "Store");
         });
     }
