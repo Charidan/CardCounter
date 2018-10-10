@@ -11,8 +11,8 @@ const deckSchema = new mongoose.Schema({
     // deck settings
     showCardsLocked: Boolean,
     showCardsEditing: Boolean,
-    drawTransferTargets: [deckRefSchema],
-    anyTransferTargets: [deckRefSchema],
+    transferTargetsDrawn: [deckRefSchema],
+    transferTargetsAny: [deckRefSchema],
 
     // legal actions
     legalDraw: Boolean,

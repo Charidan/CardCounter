@@ -150,8 +150,8 @@ let createDeck = function(callback, gameid, name, rangeMin, rangeMax)
             // deck settings
             showCardsLocked: false,
             showCardsEditing: false,
-            drawTransferTargets: [],
-            anyTransferTargets: [],
+            transferTargetsDrawn: [],
+            transferTargetsAny: [],
 
             // legal actions
             legalDraw: false,
@@ -407,13 +407,13 @@ router.post('/deck/:deckid/setTargets/', (req, res) => {
 
         if(req.body.drawnOrAny)
         {
-            deck.drawTransferTargets = req.body.targetDecks;
-            deck.markModified('drawTransferTargets');
+            deck.transferTargetsDrawn = req.body.targetDecks;
+            deck.markModified('transferTargetsDrawn');
         }
         else
         {
-            deck.anyTransferTargets = req.body.targetDecks;
-            deck.markModified('anyTransferTargets');
+            deck.transferTargetsAny = req.body.targetDecks;
+            deck.markModified('transferTargetsAny');
         }
 
         deck.save((err, prod) => err ? fail(err, res) : res.json(prod));
@@ -471,10 +471,10 @@ Game.findById(gloomid, function(err, game) {
                     playerRefs.push( { name: "Player " + i, deckid: mongoose.Types.ObjectId() } );
                 }
 
-                shop.anyTransferTargets = playerRefs;
+                shop.transferTargetsAny = playerRefs;
 
                 shop.markModified('cards');
-                shop.markModified('anyTransferTargets');
+                shop.markModified('transferTargetsAny');
                 shop.save();
 
                 // Create player inventories and link transfer to the shop bidirectionally
@@ -485,9 +485,9 @@ Game.findById(gloomid, function(err, game) {
                     player.showCardsLocked = true;
                     player.legalAcceptTransfer = true;
                     player.legalPerformTransferAny = true;
-                    player.anyTransferTargets = [{name: shop.name, deckid: shop._id}];
+                    player.transferTargetsAny = [{name: shop.name, deckid: shop._id}];
 
-                    player.markModified('anyTransferTargets');
+                    player.markModified('transferTargetsAny');
                     player.save();
                 };
 

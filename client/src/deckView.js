@@ -360,7 +360,7 @@ class DeckDisplay extends React.Component
         });
     }
 
-    setTargets(drawnOrAny, targetDecks, callback)
+    setTargets(drawnOrAny, targetDecks)
     {
         this.state.app.server.post('/deck/' + this.state.deck._id + '/setTargets', {drawnOrAny: drawnOrAny, targetDecks: targetDecks}).then((res) =>
         {
@@ -400,7 +400,7 @@ class DeckDisplay extends React.Component
                      <br/>
                      {
                          this.state.deck.legalPerformTransferDrawn ?
-                              <DeckTargetChooser id="drawnTargetChooser" app={this.state.app} callback={this.setTargets.bind(this, true)} initTargets={this.state.deck.drawTransferTargets} deckid={this.state.deck._id}/>
+                              <DeckTargetChooser id="drawnTargetChooser" app={this.state.app} callback={this.setTargets.bind(this, true)} initTargets={this.state.deck.transferTargetsDrawn} deckid={this.state.deck._id}/>
                               :
                               null
                      }
@@ -409,7 +409,7 @@ class DeckDisplay extends React.Component
                      <br/>
                      {
                          this.state.deck.legalPerformTransferAny ?
-                            <DeckTargetChooser id="anyTargetChooser" app={this.state.app} callback={this.setTargets.bind(this, false)} initTargets={this.state.deck.anyTransferTargets} deckid={this.state.deck._id}/>
+                            <DeckTargetChooser id="anyTargetChooser" app={this.state.app} callback={this.setTargets.bind(this, false)} initTargets={this.state.deck.transferTargetsAny} deckid={this.state.deck._id}/>
                             :
                             null
                      }
